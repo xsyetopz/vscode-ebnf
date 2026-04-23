@@ -1,8 +1,8 @@
 {
-  "name": "vscode-abnf-intellisense",
+  "name": "vscode-bnf-intellisense",
   "type": "module",
-  "displayName": "ABNF Syntax Highlighting and Intellisense",
-  "description": "ABNF (RFC 5234) grammar support with syntax highlighting, go-to definition, hover, completions, diagnostics, formatting, and more",
+  "displayName": "BNF IntelliSense",
+  "description": "BNF, EBNF, ABNF, and RBNF grammar support with syntax highlighting, navigation, diagnostics, formatting, and more",
   "version": "0.1.2",
   "author": {
     "name": "xsyetopz"
@@ -10,30 +10,32 @@
   "license": "MIT",
   "private": true,
   "publisher": "xsyetopz",
-  "homepage": "https://github.com/xsyetopz/vscode-abnf-intellisense",
+  "homepage": "https://github.com/xsyetopz/vscode-bnf-intellisense",
   "repository": {
     "type": "git",
-    "url": "https://github.com/xsyetopz/vscode-abnf-intellisense.git"
+    "url": "https://github.com/xsyetopz/vscode-bnf-intellisense.git"
   },
   "bugs": {
-    "url": "https://github.com/xsyetopz/vscode-abnf-intellisense/issues"
+    "url": "https://github.com/xsyetopz/vscode-bnf-intellisense/issues"
   },
   "keywords": [
-    "ABNF",
-    "RFC 5234",
-    "RFC 7405",
     "BNF",
     "EBNF",
+    "ABNF",
+    "RBNF",
+    "RFC 5234",
+    "RFC 7405",
+    "RFC 5511",
+    "W3C XML EBNF",
+    "Backus-Naur Form",
     "grammar",
-    "syntax",
     "syntax highlighting",
     "parser",
     "language server",
     "intellisense",
     "formatter",
     "linter",
-    "diagnostics",
-    "augmented backus-naur form"
+    "diagnostics"
   ],
   "categories": [
     "Programming Languages"
@@ -58,7 +60,52 @@
         "extensions": [
           ".abnf"
         ],
-        "configuration": "abnf-language-configuration.json",
+        "configuration": "bnf-language-configuration.json",
+        "icon": {
+          "light": "logo.png",
+          "dark": "logo.png"
+        }
+      },
+      {
+        "id": "bnf",
+        "aliases": [
+          "BNF",
+          "bnf"
+        ],
+        "extensions": [
+          ".bnf"
+        ],
+        "configuration": "bnf-language-configuration.json",
+        "icon": {
+          "light": "logo.png",
+          "dark": "logo.png"
+        }
+      },
+      {
+        "id": "ebnf",
+        "aliases": [
+          "EBNF",
+          "ebnf"
+        ],
+        "extensions": [
+          ".ebnf"
+        ],
+        "configuration": "bnf-language-configuration.json",
+        "icon": {
+          "light": "logo.png",
+          "dark": "logo.png"
+        }
+      },
+      {
+        "id": "rbnf",
+        "aliases": [
+          "RBNF",
+          "rbnf"
+        ],
+        "extensions": [
+          ".rbnf"
+        ],
+        "configuration": "bnf-language-configuration.json",
         "icon": {
           "light": "logo.png",
           "dark": "logo.png"
@@ -72,6 +119,21 @@
         "path": "syntaxes/abnf.tmLanguage.json"
       },
       {
+        "language": "bnf",
+        "scopeName": "source.bnf",
+        "path": "syntaxes/bnf.tmLanguage.json"
+      },
+      {
+        "language": "ebnf",
+        "scopeName": "source.ebnf",
+        "path": "syntaxes/ebnf.tmLanguage.json"
+      },
+      {
+        "language": "rbnf",
+        "scopeName": "source.rbnf",
+        "path": "syntaxes/rbnf.tmLanguage.json"
+      },
+      {
         "scopeName": "text.html.markdown.abnf.codeblock",
         "path": "syntaxes/abnf-markdown.tmLanguage.json",
         "injectTo": [
@@ -80,43 +142,85 @@
         "embeddedLanguages": {
           "meta.embedded.block.abnf": "abnf"
         }
+      },
+      {
+        "scopeName": "text.html.markdown.bnf.codeblock",
+        "path": "syntaxes/bnf-markdown.tmLanguage.json",
+        "injectTo": [
+          "text.html.markdown"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.block.bnf": "bnf"
+        }
+      },
+      {
+        "scopeName": "text.html.markdown.ebnf.codeblock",
+        "path": "syntaxes/ebnf-markdown.tmLanguage.json",
+        "injectTo": [
+          "text.html.markdown"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.block.ebnf": "ebnf"
+        }
+      },
+      {
+        "scopeName": "text.html.markdown.rbnf.codeblock",
+        "path": "syntaxes/rbnf-markdown.tmLanguage.json",
+        "injectTo": [
+          "text.html.markdown"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.block.rbnf": "rbnf"
+        }
       }
     ],
     "snippets": [
       {
         "language": "abnf",
         "path": "snippets/abnf.json"
+      },
+      {
+        "language": "bnf",
+        "path": "snippets/bnf.json"
+      },
+      {
+        "language": "ebnf",
+        "path": "snippets/bnf.json"
+      },
+      {
+        "language": "rbnf",
+        "path": "snippets/bnf.json"
       }
     ],
     "configuration": {
-      "title": "ABNF",
+      "title": "BNF IntelliSense",
       "properties": {
-        "abnf.diagnostics.enable": {
+        "bnf.diagnostics.enable": {
           "type": "boolean",
           "default": true,
-          "description": "Enable/disable diagnostics for ABNF files."
+          "description": "Enable/disable diagnostics for grammar files."
         },
-        "abnf.diagnostics.unusedRules": {
+        "bnf.diagnostics.unusedRules": {
           "type": "boolean",
           "default": true,
           "description": "Report rules that are defined but never referenced (as hints)."
         },
-        "abnf.diagnostics.undefinedReferences": {
+        "bnf.diagnostics.undefinedReferences": {
           "type": "boolean",
           "default": true,
           "description": "Report references to undefined rules."
         },
-        "abnf.formatting.alignEquals": {
+        "bnf.formatting.alignEquals": {
           "type": "boolean",
           "default": true,
           "description": "Align = signs across consecutive rule definitions."
         },
-        "abnf.formatting.continuationIndent": {
+        "bnf.formatting.continuationIndent": {
           "type": "number",
           "default": 4,
           "description": "Number of spaces for continuation lines."
         },
-        "abnf.formatting.alternativeIndent": {
+        "bnf.formatting.alternativeIndent": {
           "type": "string",
           "enum": [
             "align",
@@ -129,12 +233,12 @@
           ],
           "description": "How to indent alternatives on continuation lines."
         },
-        "abnf.formatting.blankLinesBetweenRules": {
+        "bnf.formatting.blankLinesBetweenRules": {
           "type": "number",
           "default": 1,
           "description": "Number of blank lines between consecutive rule definitions."
         },
-        "abnf.formatting.breakAlternatives": {
+        "bnf.formatting.breakAlternatives": {
           "type": "string",
           "enum": [
             "always",
@@ -149,40 +253,133 @@
           ],
           "description": "How to format top-level / alternatives."
         },
-        "abnf.formatting.maxLineLength": {
+        "bnf.formatting.maxLineLength": {
           "type": "number",
           "default": 80,
           "description": "Wrap long rule bodies to this many columns. Set to 0 to disable wrapping."
         },
-        "abnf.formatting.preserveContinuationLineBreaks": {
+        "bnf.formatting.preserveContinuationLineBreaks": {
           "type": "boolean",
           "default": false,
           "description": "Preserve existing continuation line breaks (newlines followed by leading whitespace) when formatting."
         },
-        "abnf.formatting.spaceBeforeInlineComment": {
+        "bnf.formatting.spaceBeforeInlineComment": {
           "type": "number",
           "default": 2,
           "description": "Spaces before inline ; comments in rule bodies."
         },
-        "abnf.formatting.insertFinalNewline": {
+        "bnf.formatting.insertFinalNewline": {
           "type": "boolean",
           "default": true,
           "description": "Insert a final newline at end of file."
         },
-        "abnf.inlayHints.referenceCount": {
+        "bnf.inlayHints.referenceCount": {
           "type": "boolean",
           "default": false,
           "description": "Show reference count after rule names."
         },
-        "abnf.inlayHints.recursion": {
+        "bnf.inlayHints.recursion": {
           "type": "boolean",
           "default": false,
           "description": "Mark directly recursive rules."
         },
-        "abnf.inlayHints.unusedMarker": {
+        "bnf.inlayHints.unusedMarker": {
           "type": "boolean",
           "default": false,
           "description": "Mark unused rules inline (in addition to diagnostic)."
+        },
+        "abnf.diagnostics.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "(Legacy ABNF alias) Enable/disable diagnostics for ABNF files."
+        },
+        "abnf.diagnostics.unusedRules": {
+          "type": "boolean",
+          "default": true,
+          "description": "(Legacy ABNF alias) Report rules that are defined but never referenced (as hints)."
+        },
+        "abnf.diagnostics.undefinedReferences": {
+          "type": "boolean",
+          "default": true,
+          "description": "(Legacy ABNF alias) Report references to undefined rules."
+        },
+        "abnf.formatting.alignEquals": {
+          "type": "boolean",
+          "default": true,
+          "description": "(Legacy ABNF alias) Align = signs across consecutive rule definitions."
+        },
+        "abnf.formatting.continuationIndent": {
+          "type": "number",
+          "default": 4,
+          "description": "(Legacy ABNF alias) Number of spaces for continuation lines."
+        },
+        "abnf.formatting.alternativeIndent": {
+          "type": "string",
+          "enum": [
+            "align",
+            "indent"
+          ],
+          "default": "align",
+          "enumDescriptions": [
+            "Align / under the first element after =",
+            "Use fixed continuation indent"
+          ],
+          "description": "(Legacy ABNF alias) How to indent alternatives on continuation lines."
+        },
+        "abnf.formatting.blankLinesBetweenRules": {
+          "type": "number",
+          "default": 1,
+          "description": "(Legacy ABNF alias) Number of blank lines between consecutive rule definitions."
+        },
+        "abnf.formatting.breakAlternatives": {
+          "type": "string",
+          "enum": [
+            "always",
+            "auto",
+            "never"
+          ],
+          "default": "always",
+          "enumDescriptions": [
+            "Always put top-level / alternatives on their own lines",
+            "Inline if it fits under maxLineLength, otherwise break",
+            "Never force / alternatives onto new lines"
+          ],
+          "description": "(Legacy ABNF alias) How to format top-level / alternatives."
+        },
+        "abnf.formatting.maxLineLength": {
+          "type": "number",
+          "default": 80,
+          "description": "(Legacy ABNF alias) Wrap long rule bodies to this many columns. Set to 0 to disable wrapping."
+        },
+        "abnf.formatting.preserveContinuationLineBreaks": {
+          "type": "boolean",
+          "default": false,
+          "description": "(Legacy ABNF alias) Preserve existing continuation line breaks (newlines followed by leading whitespace) when formatting."
+        },
+        "abnf.formatting.spaceBeforeInlineComment": {
+          "type": "number",
+          "default": 2,
+          "description": "(Legacy ABNF alias) Spaces before inline ; comments in rule bodies."
+        },
+        "abnf.formatting.insertFinalNewline": {
+          "type": "boolean",
+          "default": true,
+          "description": "(Legacy ABNF alias) Insert a final newline at end of file."
+        },
+        "abnf.inlayHints.referenceCount": {
+          "type": "boolean",
+          "default": false,
+          "description": "(Legacy ABNF alias) Show reference count after rule names."
+        },
+        "abnf.inlayHints.recursion": {
+          "type": "boolean",
+          "default": false,
+          "description": "(Legacy ABNF alias) Mark directly recursive rules."
+        },
+        "abnf.inlayHints.unusedMarker": {
+          "type": "boolean",
+          "default": false,
+          "description": "(Legacy ABNF alias) Mark unused rules inline (in addition to diagnostic)."
         }
       }
     }
@@ -198,12 +395,12 @@
     "vscode:prepublish": "bun run build"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.9",
-    "@types/bun": "^1.3.11",
-    "@types/node": "^25.5.0",
+    "@biomejs/biome": "^2.4.12",
+    "@types/bun": "^1.3.13",
+    "@types/node": "^25.6.0",
     "@types/vscode": "^1.75.0",
-    "@vscode/vsce": "^3.7.1",
-    "typescript": "^6.0.2"
+    "@vscode/vsce": "^3.9.1",
+    "typescript": "^6.0.3"
   },
   "trustedDependencies": [
     "@biomejs/biome",

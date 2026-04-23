@@ -1,5 +1,8 @@
 import type { Range } from "vscode";
 
+/**
+ * Token categories emitted by the ABNF lexer.
+ */
 export enum AbnfTokenKind {
 	Rulename = 0,
 	DefinedAs = 1,
@@ -22,6 +25,9 @@ export enum AbnfTokenKind {
 	Unknown = 18,
 }
 
+/**
+ * Source token with text and single-line position metadata.
+ */
 export interface AbnfToken {
 	kind: AbnfTokenKind;
 	text: string;
@@ -30,6 +36,9 @@ export interface AbnfToken {
 	column: number;
 }
 
+/**
+ * Parsed ABNF expression node accepted by rule bodies.
+ */
 export type AbnfExpression =
 	| AbnfAlternation
 	| AbnfConcatenation
@@ -41,16 +50,25 @@ export type AbnfExpression =
 	| AbnfNumeric
 	| AbnfProse;
 
+/**
+ * ABNF expression node for slash-separated alternatives.
+ */
 export interface AbnfAlternation {
 	kind: "alternation";
 	alternatives: AbnfExpression[];
 }
 
+/**
+ * ABNF expression node for whitespace-separated elements.
+ */
 export interface AbnfConcatenation {
 	kind: "concatenation";
 	elements: AbnfExpression[];
 }
 
+/**
+ * ABNF expression node for min/max repetition prefixes.
+ */
 export interface AbnfRepetition {
 	kind: "repetition";
 	min: number;
@@ -58,34 +76,52 @@ export interface AbnfRepetition {
 	element: AbnfExpression;
 }
 
+/**
+ * ABNF expression node for parenthesized subexpressions.
+ */
 export interface AbnfGroup {
 	kind: "group";
 	expression: AbnfExpression;
 }
 
+/**
+ * ABNF expression node for bracketed optional subexpressions.
+ */
 export interface AbnfOptional {
 	kind: "optional";
 	expression: AbnfExpression;
 }
 
+/**
+ * ABNF expression node that references another rule.
+ */
 export interface AbnfRulename {
 	kind: "rulename";
 	name: string;
 	range: Range;
 }
 
+/**
+ * ABNF expression node for quoted terminal text.
+ */
 export interface AbnfString {
 	kind: "string";
 	value: string;
 	caseSensitive: boolean;
 }
 
+/**
+ * ABNF expression node for numeric terminal values.
+ */
 export interface AbnfNumeric {
 	kind: "numeric";
 	base: "d" | "x" | "b";
 	text: string;
 }
 
+/**
+ * ABNF expression node for prose-val terminals.
+ */
 export interface AbnfProse {
 	kind: "prose";
 	text: string;

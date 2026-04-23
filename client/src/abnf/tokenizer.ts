@@ -415,6 +415,9 @@ function scanToken(
 	return scanSingleChar(text, i, line, column);
 }
 
+/**
+ * Tokenizes RFC ABNF source text.
+ */
 export function tokenize(text: string): AbnfToken[] {
 	const tokens: AbnfToken[] = [];
 	let i = 0;

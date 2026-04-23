@@ -1,0 +1,23 @@
+; JSON value grammar in W3C BNF style
+<json-text> ::= <ws> <value> <ws>
+
+<value> ::= <object> | <array> | <string> | <number> | "true" | "false" | "null"
+
+<object> ::= "{" <ws> [<member> {<ws> "," <ws> <member>}] <ws> "}"
+<member> ::= <string> <ws> ":" <ws> <value>
+<array> ::= "[" <ws> [<value> {<ws> "," <ws> <value>}] <ws> "]"
+
+<string> ::= "\"" {<char>} "\""
+<char> ::= <unescaped> | "\\" ("\"" | "/" | "b" | "f" | "n" | "r" | "t" | <unicode>)
+<unicode> ::= "u" <hex> <hex> <hex> <hex>
+
+<number> ::= ["-"] <int> [<frac>] [<exp>]
+<int> ::= "0" | <digit-one-nine> {<digit>}
+<frac> ::= "." <digit> {<digit>}
+<exp> ::= ("e" | "E") ["-" | "+"] <digit> {<digit>}
+
+<digit> ::= "0" | <digit-one-nine>
+<digit-one-nine> ::= "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+<hex> ::= <digit> | "A" | "B" | "C" | "D" | "E" | "F" | "a" | "b" | "c" | "d" | "e" | "f"
+<unescaped> ::= "any Unicode scalar except quote, reverse solidus, or control"
+<ws> ::= {" " | "\t" | "\n" | "\r"}

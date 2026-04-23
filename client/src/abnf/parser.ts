@@ -9,11 +9,12 @@ import { tokenize } from "./tokenizer.ts";
 import type { AbnfExpression, AbnfToken } from "./types.ts";
 import { AbnfTokenKind } from "./types.ts";
 
-const DIAGNOSTIC_SOURCE = "abnf";
-
+/**
+ * Expression AST side table keyed by parsed ABNF rules.
+ */
 export const ruleExpressions = new WeakMap<Rule, AbnfExpression>();
 
-// ── Module-level helpers ──────────────────────────────────────────────────────
+const DIAGNOSTIC_SOURCE = "abnf";
 
 function tokenRange(token: AbnfToken): Range {
 	return new Range(
@@ -45,7 +46,7 @@ function collectPrecedingComment(
 		j--;
 	}
 	if (j >= 0 && tokens[j]?.kind === AbnfTokenKind.Comment) {
-		return tokens[j]?.text.slice(1).trim(); // strip leading ";"
+		return tokens[j]?.text.slice(1).trim();
 	}
 	return undefined;
 }
@@ -68,18 +69,14 @@ function collectRuleBodyTokens(
 			const j = i + 1;
 			const nextNonNl = tokens[j];
 			if (nextNonNl && nextNonNl.kind === AbnfTokenKind.Whitespace) {
-				// Continuation line - keep collecting
 				bodyTokens.push(curr);
 				i++;
 				continue;
 			}
-			// Next line starts at column 0 - check for rule boundary
 			if (nextNonNl && isRuleStart(tokens, j)) {
-				// New rule starts - stop collecting
-				i++; // consume newline but don't include in body
+				i++;
 				break;
 			}
-			// Could be comment, empty line, or unknown token - keep collecting
 			bodyTokens.push(curr);
 			i++;
 			continue;
@@ -157,22 +154,24 @@ function buildRuleFromTokens(
 	return rule;
 }
 
-// ── Expression parser ────────────────────────────────────────────────────────
-
 class ExpressionParser {
-	private readonly tokens: AbnfToken[];
-	private pos: number;
 	readonly diagnostics: Diagnostic[] = [];
 	readonly references: IdentifierReference[] = [];
+	readonly #tokens: AbnfToken[];
+	#pos: number;
 
 	constructor(tokens: AbnfToken[]) {
-		this.tokens = tokens;
-		this.pos = 0;
+		this.#tokens = tokens;
+		this.#pos = 0;
 	}
 
-	private peek(): AbnfToken | undefined {
-		while (this.pos < this.tokens.length) {
-			const t = this.tokens[this.pos];
+	parse(): AbnfExpression {
+		return this.#parseAlternation();
+	}
+
+	#peek(): AbnfToken | undefined {
+		while (this.#pos < this.#tokens.length) {
+			const t = this.#tokens[this.#pos];
 			if (t === undefined) {
 				break;
 			}
@@ -181,7 +180,7 @@ class ExpressionParser {
 				t.kind === AbnfTokenKind.Newline ||
 				t.kind === AbnfTokenKind.Comment
 			) {
-				this.pos++;
+				this.#pos++;
 				continue;
 			}
 			return t;
@@ -189,33 +188,31 @@ class ExpressionParser {
 		return undefined;
 	}
 
-	private peekRaw(): AbnfToken | undefined {
-		return this.pos < this.tokens.length ? this.tokens[this.pos] : undefined;
+	#peekRaw(): AbnfToken | undefined {
+		return this.#pos < this.#tokens.length
+			? this.#tokens[this.#pos]
+			: undefined;
 	}
 
-	private consume(): AbnfToken | undefined {
-		const t = this.peek();
+	#consume(): AbnfToken | undefined {
+		const t = this.#peek();
 		if (t) {
-			this.pos++;
+			this.#pos++;
 		}
 		return t;
 	}
 
-	parse(): AbnfExpression {
-		return this.parseAlternation();
-	}
-
-	private parseAlternation(): AbnfExpression {
-		const first = this.parseConcatenation();
+	#parseAlternation(): AbnfExpression {
+		const first = this.#parseConcatenation();
 		const alternatives: AbnfExpression[] = [first];
 
 		while (true) {
-			const next = this.peek();
+			const next = this.#peek();
 			if (!next || next.kind !== AbnfTokenKind.Alternation) {
 				break;
 			}
-			this.consume(); // consume "/"
-			alternatives.push(this.parseConcatenation());
+			this.#consume();
+			alternatives.push(this.#parseConcatenation());
 		}
 
 		if (alternatives.length === 1) {
@@ -224,12 +221,12 @@ class ExpressionParser {
 		return { kind: "alternation", alternatives };
 	}
 
-	private skipTriviaTracked(): { hadWhitespace: boolean; savedPos: number } {
-		const savedPos = this.pos;
+	#skipTriviaTracked(): { hadWhitespace: boolean; savedPos: number } {
+		const savedPos = this.#pos;
 		let hadWhitespace = false;
 
-		while (this.pos < this.tokens.length) {
-			const raw = this.tokens[this.pos];
+		while (this.#pos < this.#tokens.length) {
+			const raw = this.#tokens[this.#pos];
 			if (raw === undefined) {
 				break;
 			}
@@ -239,7 +236,7 @@ class ExpressionParser {
 				raw.kind === AbnfTokenKind.Comment
 			) {
 				hadWhitespace = true;
-				this.pos++;
+				this.#pos++;
 			} else {
 				break;
 			}
@@ -248,15 +245,15 @@ class ExpressionParser {
 		return { hadWhitespace, savedPos };
 	}
 
-	private parseConcatenation(): AbnfExpression {
+	#parseConcatenation(): AbnfExpression {
 		const elements: AbnfExpression[] = [];
 
 		while (true) {
-			const { hadWhitespace, savedPos } = this.skipTriviaTracked();
+			const { hadWhitespace, savedPos } = this.#skipTriviaTracked();
 
-			const next = this.peekRaw();
-			if (!(next && this.isElementStart(next))) {
-				this.pos = savedPos;
+			const next = this.#peekRaw();
+			if (!(next && this.#isElementStart(next))) {
+				this.#pos = savedPos;
 				break;
 			}
 
@@ -265,7 +262,7 @@ class ExpressionParser {
 				break;
 			}
 
-			const elem = this.parseRepetition();
+			const elem = this.#parseRepetition();
 			elements.push(elem);
 		}
 
@@ -279,7 +276,7 @@ class ExpressionParser {
 		return { kind: "concatenation", elements };
 	}
 
-	private isElementStart(token: AbnfToken): boolean {
+	#isElementStart(token: AbnfToken): boolean {
 		switch (token.kind) {
 			case AbnfTokenKind.Rulename:
 			case AbnfTokenKind.ParenOpen:
@@ -297,52 +294,52 @@ class ExpressionParser {
 		}
 	}
 
-	private parseRepetition(): AbnfExpression {
-		const next = this.peek();
+	#parseRepetition(): AbnfExpression {
+		const next = this.#peek();
 		if (!next) {
 			return { kind: "concatenation", elements: [] };
 		}
 
 		if (next.kind === AbnfTokenKind.Integer) {
-			this.consume(); // consume integer
+			this.#consume();
 			const n = Number.parseInt(next.text, 10);
 
-			const afterInt = this.peek();
+			const afterInt = this.#peek();
 			if (afterInt && afterInt.kind === AbnfTokenKind.Asterisk) {
-				this.consume(); // consume "*"
-				const afterStar = this.peek();
+				this.#consume();
+				const afterStar = this.#peek();
 				let max: number | null = null;
 				if (afterStar && afterStar.kind === AbnfTokenKind.Integer) {
-					this.consume();
+					this.#consume();
 					max = Number.parseInt(afterStar.text, 10);
 				}
-				const element = this.parseElement();
+				const element = this.#parseElement();
 				return { kind: "repetition", min: n, max, element };
 			}
 
 			// Exact repetition: no asterisk
-			const element = this.parseElement();
+			const element = this.#parseElement();
 			return { kind: "repetition", min: n, max: n, element };
 		}
 
 		if (next.kind === AbnfTokenKind.Asterisk) {
-			this.consume(); // consume "*"
-			const afterStar = this.peek();
+			this.#consume();
+			const afterStar = this.#peek();
 			let max: number | null = null;
 			if (afterStar && afterStar.kind === AbnfTokenKind.Integer) {
-				this.consume();
+				this.#consume();
 				max = Number.parseInt(afterStar.text, 10);
 			}
-			const element = this.parseElement();
+			const element = this.#parseElement();
 			return { kind: "repetition", min: 0, max, element };
 		}
 
-		return this.parseElement();
+		return this.#parseElement();
 	}
 
-	private parseGroup(openToken: AbnfToken): AbnfExpression {
-		const inner = this.parseAlternation();
-		const closing = this.peek();
+	#parseGroup(openToken: AbnfToken): AbnfExpression {
+		const inner = this.#parseAlternation();
+		const closing = this.#peek();
 		if (!closing || closing.kind !== AbnfTokenKind.ParenClose) {
 			this.diagnostics.push({
 				message: `Unterminated group "(" - missing ")"`,
@@ -351,14 +348,14 @@ class ExpressionParser {
 				source: DIAGNOSTIC_SOURCE,
 			});
 		} else {
-			this.consume();
+			this.#consume();
 		}
 		return { kind: "group", expression: inner };
 	}
 
-	private parseOptional(openToken: AbnfToken): AbnfExpression {
-		const inner = this.parseAlternation();
-		const closing = this.peek();
+	#parseOptional(openToken: AbnfToken): AbnfExpression {
+		const inner = this.#parseAlternation();
+		const closing = this.#peek();
 		if (!closing || closing.kind !== AbnfTokenKind.BracketClose) {
 			this.diagnostics.push({
 				message: `Unterminated optional "[" - missing "]"`,
@@ -367,28 +364,28 @@ class ExpressionParser {
 				source: DIAGNOSTIC_SOURCE,
 			});
 		} else {
-			this.consume();
+			this.#consume();
 		}
 		return { kind: "optional", expression: inner };
 	}
 
-	private parseElement(): AbnfExpression {
-		const token = this.peek();
+	#parseElement(): AbnfExpression {
+		const token = this.#peek();
 		if (!token) {
 			return { kind: "concatenation", elements: [] };
 		}
 
 		switch (token.kind) {
 			case AbnfTokenKind.ParenOpen:
-				this.consume();
-				return this.parseGroup(token);
+				this.#consume();
+				return this.#parseGroup(token);
 
 			case AbnfTokenKind.BracketOpen:
-				this.consume();
-				return this.parseOptional(token);
+				this.#consume();
+				return this.#parseOptional(token);
 
 			case AbnfTokenKind.Rulename: {
-				this.consume();
+				this.#consume();
 				const range = tokenRange(token);
 				const ref: IdentifierReference = { name: token.text, range };
 				this.references.push(ref);
@@ -396,7 +393,7 @@ class ExpressionParser {
 			}
 
 			case AbnfTokenKind.String:
-				this.consume();
+				this.#consume();
 				return {
 					kind: "string",
 					value: token.text.slice(1, -1),
@@ -404,7 +401,7 @@ class ExpressionParser {
 				};
 
 			case AbnfTokenKind.CaseInsensitiveString:
-				this.consume();
+				this.#consume();
 				return {
 					kind: "string",
 					value: token.text.slice(3, -1),
@@ -412,7 +409,7 @@ class ExpressionParser {
 				};
 
 			case AbnfTokenKind.CaseSensitiveString:
-				this.consume();
+				this.#consume();
 				return {
 					kind: "string",
 					value: token.text.slice(3, -1),
@@ -420,18 +417,18 @@ class ExpressionParser {
 				};
 
 			case AbnfTokenKind.NumericValue: {
-				this.consume();
+				this.#consume();
 				const base = token.text[1]?.toLowerCase() as "d" | "x" | "b";
 				return { kind: "numeric", base, text: token.text.slice(2) };
 			}
 
 			case AbnfTokenKind.ProseValue:
-				this.consume();
+				this.#consume();
 				return { kind: "prose", text: token.text.slice(1, -1) };
 
 			default:
 				// Unknown token - consume and produce empty
-				this.consume();
+				this.#consume();
 				return { kind: "concatenation", elements: [] };
 		}
 	}
@@ -524,6 +521,9 @@ function parseRuleAt(
 	return { rule, nextIndex };
 }
 
+/**
+ * Parses RFC ABNF text into the shared grammar document model.
+ */
 export function parseAbnf(text: string): GrammarDocument {
 	const tokens = tokenize(text);
 	const rules: Rule[] = [];
@@ -564,6 +564,9 @@ export function parseAbnf(text: string): GrammarDocument {
 
 // ── Symbol table ─────────────────────────────────────────────────────────────
 
+/**
+ * Builds definition and reference indexes for a parsed ABNF document.
+ */
 export function buildAbnfSymbolTable(doc: GrammarDocument): SymbolTable {
 	const definitions = new Map<string, Rule[]>();
 	const references = new Map<string, IdentifierReference[]>();

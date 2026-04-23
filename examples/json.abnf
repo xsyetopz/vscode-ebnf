@@ -1,0 +1,40 @@
+; JSON value grammar in ABNF style (RFC 5234/RFC 7405 subset)
+json-text = ws value ws
+
+value = object / array / string / number / true / false / null
+
+object = begin-object ws [member *(ws value-separator ws member)] ws end-object
+member = string ws name-separator ws value
+array = begin-array ws [value *(ws value-separator ws value)] ws end-array
+
+string = quotation-mark *char quotation-mark
+char = unescaped / escape (
+    %s"\" / %s"/" / %s"b" / %s"f" / %s"n" / %s"r" / %s"t" / unicode
+)
+unescaped = %x20-21 / %x23-5B / %x5D-10FFFF
+escape = %x5C
+unicode = %s"u" 4HEXDIG
+
+number = [minus] int [frac] [exp]
+int = zero / (digit-one-nine *DIGIT)
+frac = decimal-point 1*DIGIT
+exp = e [minus / plus] 1*DIGIT
+
+true = %s"true"
+false = %s"false"
+null = %s"null"
+
+begin-array = ws %x5B ws
+begin-object = ws %x7B ws
+end-array = ws %x5D ws
+end-object = ws %x7D ws
+name-separator = ws %x3A ws
+value-separator = ws %x2C ws
+quotation-mark = %x22
+minus = %x2D
+plus = %x2B
+decimal-point = %x2E
+zero = %x30
+digit-one-nine = %x31-39
+e = %s"e" / %s"E"
+ws = *(%x20 / %x09 / %x0A / %x0D)

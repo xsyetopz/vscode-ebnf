@@ -1,0 +1,60 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "BNF",
+  "scopeName": "source.bnf",
+  "patterns": [
+    { "include": "#comment" },
+    { "include": "#rule-definition" },
+    { "include": "#expression" }
+  ],
+  "repository": {
+    "comment": {
+      "name": "comment.line.semicolon.bnf",
+      "begin": "(;)",
+      "beginCaptures": { "1": { "name": "punctuation.definition.comment.bnf" } },
+      "end": "(?=\\n)"
+    },
+    "rule-definition": {
+      "match": "^\\s*(<[^<>\\r\\n]+>|[A-Za-z_][A-Za-z0-9_.:-]*)(\\s*)(::=)",
+      "captures": {
+        "1": { "name": "entity.name.function.rule.bnf" },
+        "3": { "name": "keyword.operator.assignment.bnf" }
+      }
+    },
+    "expression": {
+      "patterns": [
+        { "include": "#comment" },
+        {
+          "name": "string.quoted.double.bnf",
+          "begin": "(\\\")",
+          "beginCaptures": { "1": { "name": "punctuation.definition.string.begin.bnf" } },
+          "end": "(\\\")|(?=\\n)",
+          "endCaptures": { "1": { "name": "punctuation.definition.string.end.bnf" } }
+        },
+        {
+          "name": "string.quoted.single.bnf",
+          "begin": "(')",
+          "beginCaptures": { "1": { "name": "punctuation.definition.string.begin.bnf" } },
+          "end": "(')|(?=\\n)",
+          "endCaptures": { "1": { "name": "punctuation.definition.string.end.bnf" } }
+        },
+        {
+          "name": "keyword.operator.alternation.bnf",
+          "match": "\\|"
+        },
+        {
+          "name": "keyword.operator.repetition.bnf",
+          "match": "[?+*]"
+        },
+        {
+          "name": "punctuation.definition.group.bnf",
+          "match": "[()\\[\\]{}]"
+        },
+        {
+          "name": "variable.other.rule.bnf",
+          "match": "<[^<>\\r\\n]+>|[A-Za-z_][A-Za-z0-9_.:-]*"
+        }
+      ]
+    }
+  }
+}

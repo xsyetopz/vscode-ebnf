@@ -1,0 +1,23 @@
+/* JSON value grammar in W3C XML EBNF style */
+[1] json-text ::= ws value ws
+
+[2] value ::= object | array | string | number | "true" | "false" | "null"
+
+[3] object ::= "{" ws (member (ws "," ws member)*)? ws "}"
+[4] member ::= string ws ":" ws value
+[5] array ::= "[" ws (value (ws "," ws value)*)? ws "]"
+
+[6] string ::= '"' char* '"'
+[7] char ::= unescaped | "\\" ('"' | "/" | "b" | "f" | "n" | "r" | "t" | unicode)
+[8] unicode ::= "u" hex hex hex hex
+
+[9] number ::= "-"? int frac? exp?
+[10] int ::= "0" | digit-one-nine digit*
+[11] frac ::= "." digit+
+[12] exp ::= ("e" | "E") ("-" | "+")? digit+
+
+[13] digit ::= "0" | digit-one-nine
+[14] digit-one-nine ::= "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+[15] hex ::= digit | "A" | "B" | "C" | "D" | "E" | "F" | "a" | "b" | "c" | "d" | "e" | "f"
+[16] unescaped ::= [#x20-#x21] | [#x23-#x5B] | [#x5D-#x10FFFF]
+[17] ws ::= (#x20 | #x9 | #xA | #xD)*

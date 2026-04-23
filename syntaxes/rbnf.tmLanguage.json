@@ -1,0 +1,60 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "RBNF",
+  "scopeName": "source.rbnf",
+  "patterns": [
+    { "include": "#comment" },
+    { "include": "#rule-definition" },
+    { "include": "#expression" }
+  ],
+  "repository": {
+    "comment": {
+      "name": "comment.line.semicolon.rbnf",
+      "begin": "(;)",
+      "beginCaptures": { "1": { "name": "punctuation.definition.comment.rbnf" } },
+      "end": "(?=\\n)"
+    },
+    "rule-definition": {
+      "match": "^\\s*(<[^<>\\r\\n]+>|[A-Za-z_][A-Za-z0-9_.:-]*)(\\s*)(::=)",
+      "captures": {
+        "1": { "name": "entity.name.function.rule.rbnf" },
+        "3": { "name": "keyword.operator.assignment.rbnf" }
+      }
+    },
+    "expression": {
+      "patterns": [
+        { "include": "#comment" },
+        {
+          "name": "string.quoted.double.rbnf",
+          "begin": "(\\\")",
+          "beginCaptures": { "1": { "name": "punctuation.definition.string.begin.rbnf" } },
+          "end": "(\\\")|(?=\\n)",
+          "endCaptures": { "1": { "name": "punctuation.definition.string.end.rbnf" } }
+        },
+        {
+          "name": "string.quoted.single.rbnf",
+          "begin": "(')",
+          "beginCaptures": { "1": { "name": "punctuation.definition.string.begin.rbnf" } },
+          "end": "(')|(?=\\n)",
+          "endCaptures": { "1": { "name": "punctuation.definition.string.end.rbnf" } }
+        },
+        {
+          "name": "keyword.operator.alternation.rbnf",
+          "match": "\\|"
+        },
+        {
+          "name": "keyword.operator.repetition.rbnf",
+          "match": "[?+*]"
+        },
+        {
+          "name": "punctuation.definition.group.rbnf",
+          "match": "[()\\[\\]{}]"
+        },
+        {
+          "name": "variable.other.rule.rbnf",
+          "match": "<[^<>\\r\\n]+>|[A-Za-z_][A-Za-z0-9_.:-]*"
+        }
+      ]
+    }
+  }
+}

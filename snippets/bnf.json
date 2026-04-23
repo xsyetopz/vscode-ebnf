@@ -1,0 +1,38 @@
+{
+  "Rule definition": {
+    "prefix": "rule",
+    "body": [
+      "${1:rule-name} ::= ${2:expression}"
+    ],
+    "description": "BNF/EBNF/RBNF rule definition"
+  },
+  "Alternative": {
+    "prefix": "alt",
+    "body": [
+      "${1:rule-name} ::= ${2:first}",
+      "    | ${3:second}"
+    ],
+    "description": "Alternative production"
+  },
+  "Optional": {
+    "prefix": "opt",
+    "body": [
+      "[${1:expression}]"
+    ],
+    "description": "Optional expression"
+  },
+  "Group": {
+    "prefix": "group",
+    "body": [
+      "(${1:expression})"
+    ],
+    "description": "Grouped expression"
+  },
+  "RBNF angle rule": {
+    "prefix": "angle",
+    "body": [
+      "<${1:rule name}> ::= ${2:expression}"
+    ],
+    "description": "RBNF angle-bracket rule"
+  }
+}

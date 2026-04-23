@@ -1,174 +1,174 @@
 {
-	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-	"name": "ABNF",
-	"scopeName": "source.abnf",
-	"patterns": [
-		{ "include": "#comment" },
-		{ "include": "#rule-definition" },
-		{ "include": "#expression" }
-	],
-	"repository": {
-		"comment": {
-			"name": "comment.line.semicolon.abnf",
-			"begin": "(;)",
-			"beginCaptures": { "1": { "name": "punctuation.definition.comment.abnf" } },
-			"end": "(?=\\n)"
-		},
-		"rule-definition": {
-			"match": "^([a-zA-Z][a-zA-Z0-9-]*)(\\s*)(=\\/|=)",
-			"captures": {
-				"1": { "name": "entity.name.function.rule.abnf" },
-				"2": { },
-				"3": {
-					"patterns": [
-						{
-							"match": "=\\/",
-							"name": "keyword.operator.incremental.abnf"
-						},
-						{
-							"match": "=",
-							"name": "keyword.operator.assignment.abnf"
-						}
-					]
-				}
-			}
-		},
-		"expression": {
-			"patterns": [
-				{ "include": "#comment" },
-				{ "include": "#numeric-value" },
-				{ "include": "#string-case-sensitive" },
-				{ "include": "#string-case-insensitive" },
-				{ "include": "#string-plain" },
-				{ "include": "#prose-value" },
-				{ "include": "#repetition-bounded" },
-				{ "include": "#repetition-min-only" },
-				{ "include": "#repetition-max-only" },
-				{ "include": "#repetition-star" },
-				{ "include": "#alternation" },
-				{ "include": "#brackets" },
-				{ "include": "#identifier" }
-			]
-		},
-		"numeric-value": {
-			"patterns": [
-				{
-					"name": "constant.numeric.hex.abnf",
-					"match": "(%[xX])([0-9a-fA-F]+)(?:(-)((?:[0-9a-fA-F]+))|(\\.)((?:[0-9a-fA-F]+(?:\\.[0-9a-fA-F]+)*)))?",
-					"captures": {
-						"1": { "name": "constant.numeric.prefix.abnf" },
-						"2": { },
-						"3": { "name": "keyword.operator.range.abnf" },
-						"4": { },
-						"5": { "name": "punctuation.separator.numeric.abnf" },
-						"6": { }
-					}
-				},
-				{
-					"name": "constant.numeric.decimal.abnf",
-					"match": "(%[dD])([0-9]+)(?:(-)([0-9]+)|(\\.)[0-9]+(?:\\.[0-9]+)*)?",
-					"captures": {
-						"1": { "name": "constant.numeric.prefix.abnf" },
-						"2": { },
-						"3": { "name": "keyword.operator.range.abnf" },
-						"4": { },
-						"5": { "name": "punctuation.separator.numeric.abnf" }
-					}
-				},
-				{
-					"name": "constant.numeric.binary.abnf",
-					"match": "(%[bB])([01]+)(?:(-)([01]+)|(\\.)[01]+(?:\\.[01]+)*)?",
-					"captures": {
-						"1": { "name": "constant.numeric.prefix.abnf" },
-						"2": { },
-						"3": { "name": "keyword.operator.range.abnf" },
-						"4": { },
-						"5": { "name": "punctuation.separator.numeric.abnf" }
-					}
-				}
-			]
-		},
-		"string-case-sensitive": {
-			"match": "(%[sS])(\"[^\"]*\")",
-			"captures": {
-				"1": { "name": "storage.modifier.case.abnf" },
-				"2": { "name": "string.quoted.double.case-sensitive.abnf" }
-			}
-		},
-		"string-case-insensitive": {
-			"match": "(%[iI])(\"[^\"]*\")",
-			"captures": {
-				"1": { "name": "storage.modifier.case.abnf" },
-				"2": { "name": "string.quoted.double.case-insensitive.abnf" }
-			}
-		},
-		"string-plain": {
-			"name": "string.quoted.double.abnf",
-			"begin": "(\")",
-			"beginCaptures": { "1": { "name": "punctuation.definition.string.begin.abnf" } },
-			"end": "(\")|(?=\\n)",
-			"endCaptures": { "1": { "name": "punctuation.definition.string.end.abnf" } }
-		},
-		"prose-value": {
-			"name": "string.other.prose-value.abnf",
-			"begin": "(<)",
-			"beginCaptures": { "1": { "name": "punctuation.definition.prose-value.begin.abnf" } },
-			"end": "(>)|(?=\\n)",
-			"endCaptures": { "1": { "name": "punctuation.definition.prose-value.end.abnf" } }
-		},
-		"repetition-bounded": {
-			"match": "(\\d+)(\\*)(\\d+)",
-			"captures": {
-				"1": { "name": "constant.numeric.integer.abnf" },
-				"2": { "name": "keyword.operator.repetition.abnf" },
-				"3": { "name": "constant.numeric.integer.abnf" }
-			}
-		},
-		"repetition-min-only": {
-			"match": "(\\d+)(\\*)",
-			"captures": {
-				"1": { "name": "constant.numeric.integer.abnf" },
-				"2": { "name": "keyword.operator.repetition.abnf" }
-			}
-		},
-		"repetition-max-only": {
-			"match": "(\\*)(\\d+)",
-			"captures": {
-				"1": { "name": "keyword.operator.repetition.abnf" },
-				"2": { "name": "constant.numeric.integer.abnf" }
-			}
-		},
-		"repetition-star": {
-			"name": "keyword.operator.repetition.abnf",
-			"match": "\\*"
-		},
-		"alternation": {
-			"name": "keyword.operator.alternation.abnf",
-			"match": "/"
-		},
-		"brackets": {
-			"patterns": [
-				{
-					"name": "punctuation.definition.group.begin.abnf",
-					"match": "\\("
-				},
-				{
-					"name": "punctuation.definition.group.end.abnf",
-					"match": "\\)"
-				},
-				{
-					"name": "punctuation.definition.optional.begin.abnf",
-					"match": "\\["
-				},
-				{
-					"name": "punctuation.definition.optional.end.abnf",
-					"match": "\\]"
-				}
-			]
-		},
-		"identifier": {
-			"name": "variable.other.rule.abnf",
-			"match": "[a-zA-Z][a-zA-Z0-9-]*"
-		}
-	}
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "ABNF",
+  "scopeName": "source.abnf",
+  "patterns": [
+    { "include": "#comment" },
+    { "include": "#rule-definition" },
+    { "include": "#expression" }
+  ],
+  "repository": {
+    "comment": {
+      "name": "comment.line.semicolon.abnf",
+      "begin": "(;)",
+      "beginCaptures": { "1": { "name": "punctuation.definition.comment.abnf" } },
+      "end": "(?=\\n)"
+    },
+    "rule-definition": {
+      "match": "^([a-zA-Z][a-zA-Z0-9-]*)(\\s*)(=\\/|=)",
+      "captures": {
+        "1": { "name": "entity.name.function.rule.abnf" },
+        "2": { },
+        "3": {
+          "patterns": [
+            {
+              "match": "=\\/",
+              "name": "keyword.operator.incremental.abnf"
+            },
+            {
+              "match": "=",
+              "name": "keyword.operator.assignment.abnf"
+            }
+          ]
+        }
+      }
+    },
+    "expression": {
+      "patterns": [
+        { "include": "#comment" },
+        { "include": "#numeric-value" },
+        { "include": "#string-case-sensitive" },
+        { "include": "#string-case-insensitive" },
+        { "include": "#string-plain" },
+        { "include": "#prose-value" },
+        { "include": "#repetition-bounded" },
+        { "include": "#repetition-min-only" },
+        { "include": "#repetition-max-only" },
+        { "include": "#repetition-star" },
+        { "include": "#alternation" },
+        { "include": "#brackets" },
+        { "include": "#identifier" }
+      ]
+    },
+    "numeric-value": {
+      "patterns": [
+        {
+          "name": "constant.numeric.hex.abnf",
+          "match": "(%[xX])([0-9a-fA-F]+)(?:(-)((?:[0-9a-fA-F]+))|(\\.)((?:[0-9a-fA-F]+(?:\\.[0-9a-fA-F]+)*)))?",
+          "captures": {
+            "1": { "name": "constant.numeric.prefix.abnf" },
+            "2": { },
+            "3": { "name": "keyword.operator.range.abnf" },
+            "4": { },
+            "5": { "name": "punctuation.separator.numeric.abnf" },
+            "6": { }
+          }
+        },
+        {
+          "name": "constant.numeric.decimal.abnf",
+          "match": "(%[dD])([0-9]+)(?:(-)([0-9]+)|(\\.)[0-9]+(?:\\.[0-9]+)*)?",
+          "captures": {
+            "1": { "name": "constant.numeric.prefix.abnf" },
+            "2": { },
+            "3": { "name": "keyword.operator.range.abnf" },
+            "4": { },
+            "5": { "name": "punctuation.separator.numeric.abnf" }
+          }
+        },
+        {
+          "name": "constant.numeric.binary.abnf",
+          "match": "(%[bB])([01]+)(?:(-)([01]+)|(\\.)[01]+(?:\\.[01]+)*)?",
+          "captures": {
+            "1": { "name": "constant.numeric.prefix.abnf" },
+            "2": { },
+            "3": { "name": "keyword.operator.range.abnf" },
+            "4": { },
+            "5": { "name": "punctuation.separator.numeric.abnf" }
+          }
+        }
+      ]
+    },
+    "string-case-sensitive": {
+      "match": "(%[sS])(\"[^\"]*\")",
+      "captures": {
+        "1": { "name": "storage.modifier.case.abnf" },
+        "2": { "name": "string.quoted.double.case-sensitive.abnf" }
+      }
+    },
+    "string-case-insensitive": {
+      "match": "(%[iI])(\"[^\"]*\")",
+      "captures": {
+        "1": { "name": "storage.modifier.case.abnf" },
+        "2": { "name": "string.quoted.double.case-insensitive.abnf" }
+      }
+    },
+    "string-plain": {
+      "name": "string.quoted.double.abnf",
+      "begin": "(\")",
+      "beginCaptures": { "1": { "name": "punctuation.definition.string.begin.abnf" } },
+      "end": "(\")|(?=\\n)",
+      "endCaptures": { "1": { "name": "punctuation.definition.string.end.abnf" } }
+    },
+    "prose-value": {
+      "name": "string.other.prose-value.abnf",
+      "begin": "(<)",
+      "beginCaptures": { "1": { "name": "punctuation.definition.prose-value.begin.abnf" } },
+      "end": "(>)|(?=\\n)",
+      "endCaptures": { "1": { "name": "punctuation.definition.prose-value.end.abnf" } }
+    },
+    "repetition-bounded": {
+      "match": "(\\d+)(\\*)(\\d+)",
+      "captures": {
+        "1": { "name": "constant.numeric.integer.abnf" },
+        "2": { "name": "keyword.operator.repetition.abnf" },
+        "3": { "name": "constant.numeric.integer.abnf" }
+      }
+    },
+    "repetition-min-only": {
+      "match": "(\\d+)(\\*)",
+      "captures": {
+        "1": { "name": "constant.numeric.integer.abnf" },
+        "2": { "name": "keyword.operator.repetition.abnf" }
+      }
+    },
+    "repetition-max-only": {
+      "match": "(\\*)(\\d+)",
+      "captures": {
+        "1": { "name": "keyword.operator.repetition.abnf" },
+        "2": { "name": "constant.numeric.integer.abnf" }
+      }
+    },
+    "repetition-star": {
+      "name": "keyword.operator.repetition.abnf",
+      "match": "\\*"
+    },
+    "alternation": {
+      "name": "keyword.operator.alternation.abnf",
+      "match": "/"
+    },
+    "brackets": {
+      "patterns": [
+        {
+          "name": "punctuation.definition.group.begin.abnf",
+          "match": "\\("
+        },
+        {
+          "name": "punctuation.definition.group.end.abnf",
+          "match": "\\)"
+        },
+        {
+          "name": "punctuation.definition.optional.begin.abnf",
+          "match": "\\["
+        },
+        {
+          "name": "punctuation.definition.optional.end.abnf",
+          "match": "\\]"
+        }
+      ]
+    },
+    "identifier": {
+      "name": "variable.other.rule.abnf",
+      "match": "[a-zA-Z][a-zA-Z0-9-]*"
+    }
+  }
 }

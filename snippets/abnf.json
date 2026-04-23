@@ -1,65 +1,65 @@
 {
-	"Rule": {
-		"prefix": "rule",
-		"body": [
-			"${1:name} = $0"
-		],
-		"description": "ABNF rule definition"
-	},
-	"Alternation": {
-		"prefix": "alt",
-		"body": [
-			"${1:name} = ${2:option1} / $0"
-		],
-		"description": "Rule with alternatives"
-	},
-	"Optional": {
-		"prefix": "opt",
-		"body": [
-			"[$0]"
-		],
-		"description": "Optional group [ ... ]"
-	},
-	"Repetition": {
-		"prefix": "rep",
-		"body": [
-			"*($0)"
-		],
-		"description": "Zero or more repetition *( ... )"
-	},
-	"One or more": {
-		"prefix": "rep1",
-		"body": [
-			"1*($0)"
-		],
-		"description": "One or more repetition 1*( ... )"
-	},
-	"Bounded repetition": {
-		"prefix": "repn",
-		"body": [
-			"${1:min}*${2:max}($0)"
-		],
-		"description": "Bounded repetition min*max( ... )"
-	},
-	"Hex value": {
-		"prefix": "hex",
-		"body": [
-			"%x$0"
-		],
-		"description": "Hexadecimal value %xNN"
-	},
-	"Hex range": {
-		"prefix": "range",
-		"body": [
-			"%x${1:start}-${2:end}"
-		],
-		"description": "Hexadecimal range %xNN-NN"
-	},
-	"Incremental alternative": {
-		"prefix": "inc",
-		"body": [
-			"${1:name} =/ $0"
-		],
-		"description": "Incremental alternative rule =/ ..."
-	}
+  "Rule": {
+    "prefix": "rule",
+    "body": [
+      "${1:name} = $0"
+    ],
+    "description": "ABNF rule definition"
+  },
+  "Alternation": {
+    "prefix": "alt",
+    "body": [
+      "${1:name} = ${2:option1} / $0"
+    ],
+    "description": "Rule with alternatives"
+  },
+  "Optional": {
+    "prefix": "opt",
+    "body": [
+      "[$0]"
+    ],
+    "description": "Optional group [ ... ]"
+  },
+  "Repetition": {
+    "prefix": "rep",
+    "body": [
+      "*($0)"
+    ],
+    "description": "Zero or more repetition *( ... )"
+  },
+  "One or more": {
+    "prefix": "rep1",
+    "body": [
+      "1*($0)"
+    ],
+    "description": "One or more repetition 1*( ... )"
+  },
+  "Bounded repetition": {
+    "prefix": "repn",
+    "body": [
+      "${1:min}*${2:max}($0)"
+    ],
+    "description": "Bounded repetition min*max( ... )"
+  },
+  "Hex value": {
+    "prefix": "hex",
+    "body": [
+      "%x$0"
+    ],
+    "description": "Hexadecimal value %xNN"
+  },
+  "Hex range": {
+    "prefix": "range",
+    "body": [
+      "%x${1:start}-${2:end}"
+    ],
+    "description": "Hexadecimal range %xNN-NN"
+  },
+  "Incremental alternative": {
+    "prefix": "inc",
+    "body": [
+      "${1:name} =/ $0"
+    ],
+    "description": "Incremental alternative rule =/ ..."
+  }
 }
