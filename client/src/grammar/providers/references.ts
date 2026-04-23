@@ -1,13 +1,18 @@
-import {
-	type CancellationToken,
+import type {
+	CancellationToken,
 	Location,
-	type Position,
-	type ReferenceContext,
-	type ReferenceProvider,
-	type TextDocument,
-	type Uri,
+	Position,
+	ReferenceContext,
+	ReferenceProvider,
+	TextDocument,
 } from "vscode";
+import { CORE_RULES } from "../../abnf/core-rules.ts";
+import { coreRuleDefinitionLocation } from "../core-rules-document.ts";
 import type { GrammarWorkspace } from "../workspace.ts";
+import {
+	collectWorkspaceDefinitionLocations,
+	collectWorkspaceSymbolLocations,
+} from "./symbol-locations.ts";
 import { getWordLookup } from "./word-at-position.ts";
 
 /**
@@ -31,56 +36,35 @@ export class GrammarReferenceProvider implements ReferenceProvider {
 			return undefined;
 		}
 
-		const currentUri = doc.uri.toString();
-		const locations: Location[] = collectLocationsFromFile(
-			lookup.symbolTable,
+		const locations = collectWorkspaceSymbolLocations(
+			this.#grammarWorkspace,
 			lookup.word,
+			lookup.dialect,
+			doc.uri.toString(),
+			lookup.symbolTable,
 			doc.uri,
 			context.includeDeclaration,
 		);
-
-		for (const file of this.#grammarWorkspace.getAllFiles(lookup.dialect)) {
-			if (file.uri.toString() === currentUri) {
-				continue;
-			}
-			const fileLocations = collectLocationsFromFile(
-				file.symbolTable,
+		if (
+			context.includeDeclaration &&
+			lookup.dialect === "abnf" &&
+			CORE_RULES.has(lookup.word)
+		) {
+			const definitions = collectWorkspaceDefinitionLocations(
+				this.#grammarWorkspace,
 				lookup.word,
-				file.uri,
-				context.includeDeclaration,
+				lookup.dialect,
+				doc.uri.toString(),
+				lookup.symbolTable,
+				doc.uri,
 			);
-			locations.push(...fileLocations);
+			if (definitions.length === 0) {
+				const location = coreRuleDefinitionLocation(lookup.word);
+				if (location) {
+					locations.unshift(location);
+				}
+			}
 		}
-
 		return locations.length > 0 ? locations : undefined;
 	}
-}
-
-type SymbolTable = ReturnType<GrammarWorkspace["get"]>["symbolTable"];
-
-function collectLocationsFromFile(
-	symbolTable: SymbolTable,
-	word: string,
-	uri: Uri,
-	includeDeclaration: boolean,
-): Location[] {
-	const locations: Location[] = [];
-
-	if (includeDeclaration) {
-		const defs = symbolTable.definitions.get(word);
-		if (defs) {
-			for (const rule of defs) {
-				locations.push(new Location(uri, rule.nameRange));
-			}
-		}
-	}
-
-	const refs = symbolTable.references.get(word);
-	if (refs) {
-		for (const ref of refs) {
-			locations.push(new Location(uri, ref.range));
-		}
-	}
-
-	return locations;
 }

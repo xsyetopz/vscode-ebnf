@@ -1,0 +1,31 @@
+{
+  "RBNF rule": {
+    "prefix": "rule",
+    "body": [
+      "<${1:rule name}> ::= ${2:expression}"
+    ],
+    "description": "RFC 5511 RBNF rule definition"
+  },
+  "RBNF alternative": {
+    "prefix": "alt",
+    "body": [
+      "<${1:rule name}> ::= ${2:first}",
+      "    | ${3:second}"
+    ],
+    "description": "RFC 5511 RBNF alternatives"
+  },
+  "Zero or more": {
+    "prefix": "rep",
+    "body": [
+      "*(${1:element})"
+    ],
+    "description": "RFC 5511 zero-or-more repetition"
+  },
+  "One or more": {
+    "prefix": "rep1",
+    "body": [
+      "1*(${1:element})"
+    ],
+    "description": "RFC 5511 one-or-more repetition"
+  }
+}

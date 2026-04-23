@@ -5,7 +5,7 @@ import {
 	CodeActionKind,
 	type CodeActionProvider,
 	Position,
-	type Range,
+	Range,
 	type TextDocument,
 	WorkspaceEdit,
 } from "vscode";
@@ -29,14 +29,21 @@ export class GrammarCodeActionProvider implements CodeActionProvider {
 		_token: CancellationToken,
 	): CodeAction[] | undefined {
 		const actions = context.diagnostics.flatMap((diagnostic) => {
-			const match = diagnostic.message.match(UNDEFINED_RULE_RE);
-			return match ? [createRuleAction(doc, diagnostic, match[1] ?? "")] : [];
+			const undefinedMatch = diagnostic.message.match(UNDEFINED_RULE_RE);
+			if (undefinedMatch) {
+				return [createRuleAction(doc, diagnostic, undefinedMatch[1] ?? "")];
+			}
+			if (diagnostic.message.includes("W3C XML EBNF requires '::='")) {
+				return [replaceIsoAssignmentAction(doc, diagnostic)];
+			}
+			return [];
 		});
 		return actions.length > 0 ? actions : undefined;
 	}
 }
 
 const UNDEFINED_RULE_RE = /"([^"]+)" is not defined/;
+const ISO_ASSIGNMENT_RE = /(^|\s)=/;
 
 function createRuleAction(
 	doc: TextDocument,
@@ -55,6 +62,37 @@ function createRuleAction(
 	const operator = getGrammarDialectDescriptor(dialect).assignmentOperator;
 	const prefix = lastLineText.length > 0 ? "\n\n" : "\n";
 	edit.insert(doc.uri, insertPos, `${prefix}${name} ${operator}\n    `);
+	action.edit = edit;
+	action.diagnostics = [diagnostic];
+	action.isPreferred = true;
+	return action;
+}
+
+function replaceIsoAssignmentAction(
+	doc: TextDocument,
+	diagnostic: CodeActionContext["diagnostics"][number],
+): CodeAction {
+	const action = new CodeAction(
+		"Replace '=' with '::='",
+		CodeActionKind.QuickFix,
+	);
+	const edit = new WorkspaceEdit();
+	const line = doc.lineAt(diagnostic.range.start.line).text;
+	const match = line.match(ISO_ASSIGNMENT_RE);
+	const assignmentIndex =
+		match?.index === undefined ? -1 : match.index + match[0].length - 1;
+	if (assignmentIndex >= 0) {
+		edit.replace(
+			doc.uri,
+			new Range(
+				diagnostic.range.start.line,
+				assignmentIndex,
+				diagnostic.range.start.line,
+				assignmentIndex + 1,
+			),
+			"::=",
+		);
+	}
 	action.edit = edit;
 	action.diagnostics = [diagnostic];
 	action.isPreferred = true;

@@ -10,9 +10,13 @@ import {
 import {
 	type AbnfAlternativeIndent,
 	type AbnfBreakAlternatives,
+	type AbnfFormatterConfig,
 	formatAbnfDocument,
 } from "../abnf-format.ts";
-import { formatProductionGrammarDocument } from "./format.ts";
+import {
+	formatProductionGrammarDocument,
+	type GenericGrammarFormatterConfig,
+} from "./format.ts";
 import { grammarDialectFromLanguageId } from "./grammar.ts";
 
 /**
@@ -51,7 +55,8 @@ function readConfig<T>(key: string, fallback: T): T {
 	);
 }
 
-function readFormattingConfig() {
+function readFormattingConfig(): AbnfFormatterConfig &
+	GenericGrammarFormatterConfig {
 	return {
 		alignEquals: readConfig<boolean>("formatting.alignEquals", true),
 		continuationIndent: readConfig<number>("formatting.continuationIndent", 4),
@@ -79,6 +84,18 @@ function readFormattingConfig() {
 		spaceBeforeInlineComment: readConfig<number>(
 			"formatting.spaceBeforeInlineComment",
 			2,
+		),
+		alignProductionNumbers: readConfig<boolean>(
+			"formatting.alignProductionNumbers",
+			true,
+		),
+		preserveCommentSpacing: readConfig<boolean>(
+			"formatting.preserveCommentSpacing",
+			true,
+		),
+		trimTrailingBlankLines: readConfig<boolean>(
+			"formatting.trimTrailingBlankLines",
+			true,
 		),
 	};
 }

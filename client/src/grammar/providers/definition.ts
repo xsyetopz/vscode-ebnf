@@ -1,11 +1,14 @@
-import {
-	type CancellationToken,
-	type DefinitionProvider,
+import type {
+	CancellationToken,
+	DefinitionProvider,
 	Location,
-	type Position,
-	type TextDocument,
+	Position,
+	TextDocument,
 } from "vscode";
+import { CORE_RULES } from "../../abnf/core-rules.ts";
+import { coreRuleDefinitionLocation } from "../core-rules-document.ts";
 import type { GrammarWorkspace } from "../workspace.ts";
+import { collectWorkspaceDefinitionLocations } from "./symbol-locations.ts";
 import { getWordLookup } from "./word-at-position.ts";
 
 /**
@@ -28,21 +31,21 @@ export class GrammarDefinitionProvider implements DefinitionProvider {
 			return undefined;
 		}
 
-		const definitions = lookup.symbolTable.definitions.get(lookup.word);
-		if (definitions && definitions.length > 0) {
-			return definitions.map((rule) => new Location(doc.uri, rule.nameRange));
-		}
-
-		const workspaceDefs = this.#grammarWorkspace.findDefinitions(
+		const definitions = collectWorkspaceDefinitionLocations(
+			this.#grammarWorkspace,
 			lookup.word,
 			lookup.dialect,
+			doc.uri.toString(),
+			lookup.symbolTable,
+			doc.uri,
 		);
-		if (workspaceDefs.length > 0) {
-			return workspaceDefs.map(
-				(entry) => new Location(entry.uri, entry.rule.nameRange),
-			);
+		if (definitions.length > 0) {
+			return definitions;
 		}
-
-		return undefined;
+		if (lookup.dialect !== "abnf" || !CORE_RULES.has(lookup.word)) {
+			return undefined;
+		}
+		const location = coreRuleDefinitionLocation(lookup.word);
+		return location ? [location] : undefined;
 	}
 }

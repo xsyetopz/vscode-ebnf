@@ -3,58 +3,122 @@
   "name": "BNF",
   "scopeName": "source.bnf",
   "patterns": [
-    { "include": "#comment" },
-    { "include": "#rule-definition" },
-    { "include": "#expression" }
+    {
+      "include": "#comment"
+    },
+    {
+      "include": "#rule-definition"
+    },
+    {
+      "include": "#expression"
+    }
   ],
   "repository": {
     "comment": {
       "name": "comment.line.semicolon.bnf",
       "begin": "(;)",
-      "beginCaptures": { "1": { "name": "punctuation.definition.comment.bnf" } },
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.definition.comment.bnf"
+        }
+      },
       "end": "(?=\\n)"
     },
     "rule-definition": {
       "match": "^\\s*(<[^<>\\r\\n]+>|[A-Za-z_][A-Za-z0-9_.:-]*)(\\s*)(::=)",
       "captures": {
-        "1": { "name": "entity.name.function.rule.bnf" },
-        "3": { "name": "keyword.operator.assignment.bnf" }
+        "1": {
+          "name": "entity.name.function.rule.bnf"
+        },
+        "3": {
+          "name": "keyword.operator.assignment.bnf"
+        }
       }
     },
     "expression": {
       "patterns": [
-        { "include": "#comment" },
         {
-          "name": "string.quoted.double.bnf",
-          "begin": "(\\\")",
-          "beginCaptures": { "1": { "name": "punctuation.definition.string.begin.bnf" } },
-          "end": "(\\\")|(?=\\n)",
-          "endCaptures": { "1": { "name": "punctuation.definition.string.end.bnf" } }
+          "include": "#comment"
         },
         {
-          "name": "string.quoted.single.bnf",
-          "begin": "(')",
-          "beginCaptures": { "1": { "name": "punctuation.definition.string.begin.bnf" } },
-          "end": "(')|(?=\\n)",
-          "endCaptures": { "1": { "name": "punctuation.definition.string.end.bnf" } }
+          "include": "#repetition-prefix"
         },
         {
-          "name": "keyword.operator.alternation.bnf",
-          "match": "\\|"
+          "include": "#repetition-range"
         },
         {
-          "name": "keyword.operator.repetition.bnf",
-          "match": "[?+*]"
+          "include": "#double-string"
         },
         {
-          "name": "punctuation.definition.group.bnf",
-          "match": "[()\\[\\]{}]"
+          "include": "#single-string"
         },
         {
-          "name": "variable.other.rule.bnf",
-          "match": "<[^<>\\r\\n]+>|[A-Za-z_][A-Za-z0-9_.:-]*"
+          "include": "#alternation"
+        },
+        {
+          "include": "#suffix-repetition"
+        },
+        {
+          "include": "#group-delimiter"
+        },
+        {
+          "include": "#identifier"
         }
       ]
+    },
+    "repetition-prefix": {
+      "name": "constant.numeric.repetition.bnf",
+      "match": "\\b\\d+(?=\\*)"
+    },
+    "repetition-range": {
+      "name": "keyword.operator.repetition.bnf",
+      "match": "\\d*\\*\\d*"
+    },
+    "double-string": {
+      "name": "string.quoted.double.bnf",
+      "begin": "(\\\")",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.definition.string.begin.bnf"
+        }
+      },
+      "end": "(\\\")|(?=\\n)",
+      "endCaptures": {
+        "1": {
+          "name": "punctuation.definition.string.end.bnf"
+        }
+      }
+    },
+    "single-string": {
+      "name": "string.quoted.single.bnf",
+      "begin": "(')",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.definition.string.begin.bnf"
+        }
+      },
+      "end": "(')|(?=\\n)",
+      "endCaptures": {
+        "1": {
+          "name": "punctuation.definition.string.end.bnf"
+        }
+      }
+    },
+    "alternation": {
+      "name": "keyword.operator.alternation.bnf",
+      "match": "\\|"
+    },
+    "suffix-repetition": {
+      "name": "keyword.operator.repetition.bnf",
+      "match": "[?+*]"
+    },
+    "group-delimiter": {
+      "name": "punctuation.definition.group.bnf",
+      "match": "[()\\[\\]{}]"
+    },
+    "identifier": {
+      "name": "variable.other.rule.bnf",
+      "match": "<[^<>\\r\\n]+>|[A-Za-z_][A-Za-z0-9_.:-]*"
     }
   }
 }

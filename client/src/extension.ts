@@ -2,8 +2,13 @@ import {
 	type ExtensionContext,
 	languages,
 	type TextDocument,
+	type TextDocumentContentProvider,
 	workspace,
 } from "vscode";
+import {
+	BNF_CORE_RULES_SCHEME,
+	renderCoreRulesDocument,
+} from "./grammar/core-rules-document.ts";
 import { updateGrammarDiagnostics } from "./grammar/diagnostics.ts";
 import { isGrammarLanguage, languageIdsSelector } from "./grammar/grammar.ts";
 import { registerGrammarProviders } from "./grammar/providers/index.ts";
@@ -23,6 +28,10 @@ export async function activateGrammarExtension(
 
 	context.subscriptions.push(
 		grammarWorkspace,
+		workspace.registerTextDocumentContentProvider(
+			BNF_CORE_RULES_SCHEME,
+			CORE_RULES_DOCUMENT_PROVIDER,
+		),
 		...registerGrammarProviders(
 			SELECTOR,
 			grammarWorkspace,
@@ -64,3 +73,7 @@ export async function activateGrammarExtension(
 export function deactivateGrammarExtension(): void {
 	// VS Code disposes extension subscriptions.
 }
+
+const CORE_RULES_DOCUMENT_PROVIDER: TextDocumentContentProvider = {
+	provideTextDocumentContent: () => renderCoreRulesDocument(),
+};

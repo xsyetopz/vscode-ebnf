@@ -6,7 +6,9 @@ import {
 	type TextDocument,
 	WorkspaceEdit,
 } from "vscode";
+import type { GrammarDialect } from "../dialects.ts";
 import type { GrammarWorkspace } from "../workspace.ts";
+import { collectWorkspaceSymbolLocations } from "./symbol-locations.ts";
 import { getWordLookup } from "./word-at-position.ts";
 
 /**
@@ -26,26 +28,22 @@ export class GrammarRenameProvider implements RenameProvider {
 		_token: CancellationToken,
 	): WorkspaceEdit | undefined {
 		const lookup = getWordLookup(doc, position, this.#grammarWorkspace);
-		if (!lookup) {
+		if (!(lookup && isValidRuleName(newName, lookup.dialect))) {
 			return undefined;
 		}
 
 		const edit = new WorkspaceEdit();
-
-		const defs = lookup.symbolTable.definitions.get(lookup.word);
-		if (defs) {
-			for (const rule of defs) {
-				edit.replace(doc.uri, rule.nameRange, newName);
-			}
+		for (const location of collectWorkspaceSymbolLocations(
+			this.#grammarWorkspace,
+			lookup.word,
+			lookup.dialect,
+			doc.uri.toString(),
+			lookup.symbolTable,
+			doc.uri,
+			true,
+		)) {
+			edit.replace(location.uri, location.range, newName);
 		}
-
-		const refs = lookup.symbolTable.references.get(lookup.word);
-		if (refs) {
-			for (const ref of refs) {
-				edit.replace(doc.uri, ref.range, newName);
-			}
-		}
-
 		return edit;
 	}
 
@@ -59,5 +57,25 @@ export class GrammarRenameProvider implements RenameProvider {
 			return undefined;
 		}
 		return { range: lookup.wordRange, placeholder: lookup.word };
+	}
+}
+
+const ABNF_RULE_NAME_RE = /^[A-Za-z][A-Za-z0-9-]*$/;
+const BNF_RULE_NAME_RE = /^<[^<>\r\n]+>$|^[A-Za-z_][A-Za-z0-9_.:-]*$/;
+const EBNF_RULE_NAME_RE = /^[A-Za-z_][A-Za-z0-9_.:-]*$/;
+const RBNF_RULE_NAME_RE = /^<[^<>\r\n]+>$/;
+
+function isValidRuleName(name: string, dialect: GrammarDialect): boolean {
+	switch (dialect) {
+		case "abnf":
+			return ABNF_RULE_NAME_RE.test(name);
+		case "bnf":
+			return BNF_RULE_NAME_RE.test(name);
+		case "ebnf":
+			return EBNF_RULE_NAME_RE.test(name);
+		case "rbnf":
+			return RBNF_RULE_NAME_RE.test(name);
+		default:
+			return false;
 	}
 }

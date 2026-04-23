@@ -30,4 +30,49 @@ describe("grammar diagnostics", () => {
 				.some((diagnostic) => diagnostic.message.includes("missing")),
 		).toBe(true);
 	});
+
+	test("ignores W3C EBNF character literals in undefined references", async () => {
+		const text = await Bun.file("examples/json.ebnf").text();
+		const document = grammar.parseGrammar(text, "ebnf");
+		const symbolTable = grammar.buildGrammarSymbolTable(document, "ebnf");
+		const result = { dialect: "ebnf" as const, document, symbolTable };
+		const messages = diagnostics
+			.collectGrammarDiagnostics(result, text, { unusedRules: false })
+			.map((diagnostic) => diagnostic.message);
+
+		expect(messages.some((message) => message.includes('"x20"'))).toBe(false);
+		expect(messages.some((message) => message.includes('"x10FFFF"'))).toBe(
+			false,
+		);
+	});
+
+	test("still reports real EBNF undefined references", () => {
+		const text = "root ::= [#x20-#x21] missing\n";
+		const document = grammar.parseGrammar(text, "ebnf");
+		const symbolTable = grammar.buildGrammarSymbolTable(document, "ebnf");
+		const result = { dialect: "ebnf" as const, document, symbolTable };
+		const messages = diagnostics
+			.collectGrammarDiagnostics(result, text, { unusedRules: false })
+			.map((diagnostic) => diagnostic.message);
+
+		expect(messages.some((message) => message.includes('"missing"'))).toBe(
+			true,
+		);
+		expect(messages.some((message) => message.includes('"x20"'))).toBe(false);
+	});
+
+	test("reports invalid EBNF character code and delimiters", () => {
+		const text = "root ::= #xZZ (missing\n";
+		const document = grammar.parseGrammar(text, "ebnf");
+		const messages = document.diagnostics.map(
+			(diagnostic) => diagnostic.message,
+		);
+
+		expect(messages.some((message) => message.includes("hexadecimal"))).toBe(
+			true,
+		);
+		expect(messages.some((message) => message.includes("Unclosed '('"))).toBe(
+			true,
+		);
+	});
 });

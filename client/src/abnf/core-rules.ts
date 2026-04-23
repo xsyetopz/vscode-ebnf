@@ -14,7 +14,10 @@ function coreRule(name: string, definitionText: string): Rule {
 	};
 }
 
-const CORE_RULE_LIST: Rule[] = [
+/**
+ * Ordered RFC 5234 Appendix B core rules.
+ */
+export const CORE_RULE_DEFINITIONS: readonly Rule[] = [
 	coreRule("ALPHA", "%x41-5A / %x61-7A"),
 	coreRule("BIT", '"0" / "1"'),
 	coreRule("CHAR", "%x01-7F"),
@@ -31,14 +34,14 @@ const CORE_RULE_LIST: Rule[] = [
 	coreRule("SP", "%x20"),
 	coreRule("VCHAR", "%x21-7E"),
 	coreRule("WSP", "SP / HTAB"),
-];
+] as const;
 
 /** Map of lowercase core rule name to Rule object */
 export const CORE_RULES: ReadonlyMap<string, Rule> = new Map(
-	CORE_RULE_LIST.map((r) => [r.name.toLowerCase(), r]),
+	CORE_RULE_DEFINITIONS.map((r) => [r.name.toLowerCase(), r]),
 );
 
 /** Set of lowercase core rule names for quick lookups */
 export const CORE_RULE_NAMES: ReadonlySet<string> = new Set(
-	CORE_RULE_LIST.map((r) => r.name.toLowerCase()),
+	CORE_RULE_DEFINITIONS.map((r) => r.name.toLowerCase()),
 );

@@ -70,6 +70,11 @@ export function registerGrammarProviders(
 		languages.registerCompletionItemProvider(
 			selector,
 			new GrammarCompletionProvider(workspace),
+			"<",
+			"%",
+			"#",
+			'"',
+			"'",
 		),
 		languages.registerCodeActionsProvider(
 			selector,

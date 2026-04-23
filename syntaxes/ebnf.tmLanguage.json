@@ -16,46 +16,63 @@
       "endCaptures": { "1": { "name": "punctuation.definition.comment.end.ebnf" } }
     },
     "rule-definition": {
-      "match": "^\\s*(<[^<>\\r\\n]+>|[A-Za-z_][A-Za-z0-9_.:-]*)(\\s*)(::=)",
+      "match": "^\\s*(\\[[^\\]\\r\\n]+\\])?\\s*([A-Za-z_][A-Za-z0-9_.:-]*)(\\s*)(::=)",
       "captures": {
-        "1": { "name": "entity.name.function.rule.ebnf" },
-        "3": { "name": "keyword.operator.assignment.ebnf" }
+        "1": { "name": "constant.numeric.production.ebnf" },
+        "2": { "name": "entity.name.function.rule.ebnf" },
+        "4": { "name": "keyword.operator.assignment.ebnf" }
       }
     },
     "expression": {
       "patterns": [
         { "include": "#comment" },
-        {
-          "name": "string.quoted.double.ebnf",
-          "begin": "(\\\")",
-          "beginCaptures": { "1": { "name": "punctuation.definition.string.begin.ebnf" } },
-          "end": "(\\\")|(?=\\n)",
-          "endCaptures": { "1": { "name": "punctuation.definition.string.end.ebnf" } }
-        },
-        {
-          "name": "string.quoted.single.ebnf",
-          "begin": "(')",
-          "beginCaptures": { "1": { "name": "punctuation.definition.string.begin.ebnf" } },
-          "end": "(')|(?=\\n)",
-          "endCaptures": { "1": { "name": "punctuation.definition.string.end.ebnf" } }
-        },
-        {
-          "name": "keyword.operator.alternation.ebnf",
-          "match": "\\|"
-        },
-        {
-          "name": "keyword.operator.repetition.ebnf",
-          "match": "[?+*]"
-        },
-        {
-          "name": "punctuation.definition.group.ebnf",
-          "match": "[()\\[\\]{}]"
-        },
-        {
-          "name": "variable.other.rule.ebnf",
-          "match": "<[^<>\\r\\n]+>|[A-Za-z_][A-Za-z0-9_.:-]*"
-        }
+        { "include": "#character-class" },
+        { "include": "#character-code" },
+        { "include": "#double-string" },
+        { "include": "#single-string" },
+        { "include": "#alternation" },
+        { "include": "#suffix-repetition" },
+        { "include": "#group-delimiter" },
+        { "include": "#identifier" }
       ]
+    },
+    "character-class": {
+      "name": "constant.numeric.character-class.ebnf",
+      "match": "\\[(?:\\^)?[^\\]\\r\\n]*\\]"
+    },
+    "character-code": {
+      "name": "constant.numeric.character-code.ebnf",
+      "match": "#x[0-9A-Fa-f]+"
+    },
+    "double-string": {
+      "name": "string.quoted.double.ebnf",
+      "begin": "(\\\")",
+      "beginCaptures": { "1": { "name": "punctuation.definition.string.begin.ebnf" } },
+      "end": "(\\\")|(?=\\n)",
+      "endCaptures": { "1": { "name": "punctuation.definition.string.end.ebnf" } }
+    },
+    "single-string": {
+      "name": "string.quoted.single.ebnf",
+      "begin": "(')",
+      "beginCaptures": { "1": { "name": "punctuation.definition.string.begin.ebnf" } },
+      "end": "(')|(?=\\n)",
+      "endCaptures": { "1": { "name": "punctuation.definition.string.end.ebnf" } }
+    },
+    "alternation": {
+      "name": "keyword.operator.alternation.ebnf",
+      "match": "\\|"
+    },
+    "suffix-repetition": {
+      "name": "keyword.operator.repetition.ebnf",
+      "match": "[?+*]"
+    },
+    "group-delimiter": {
+      "name": "punctuation.definition.group.ebnf",
+      "match": "[()\\[\\]{}]"
+    },
+    "identifier": {
+      "name": "variable.other.rule.ebnf",
+      "match": "<[^<>\\r\\n]+>|[A-Za-z_][A-Za-z0-9_.:-]*"
     }
   }
 }

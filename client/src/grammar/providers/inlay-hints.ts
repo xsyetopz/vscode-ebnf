@@ -8,6 +8,7 @@ import {
 	workspace,
 } from "vscode";
 import { normalizeSymbolName } from "../grammar.ts";
+import { getSyntaxDetailInlays } from "../syntax-details.ts";
 import type { GrammarWorkspace } from "../workspace.ts";
 
 /**
@@ -38,8 +39,12 @@ export class GrammarInlayHintsProvider implements InlayHintsProvider {
 		);
 		const showRecursion = readConfig<boolean>("inlayHints.recursion", false);
 		const showUnused = readConfig<boolean>("inlayHints.unusedMarker", false);
+		const showSyntaxDetails = readConfig<boolean>(
+			"inlayHints.syntaxDetails",
+			false,
+		);
 
-		if (!(showRefCount || showRecursion || showUnused)) {
+		if (!(showRefCount || showRecursion || showUnused || showSyntaxDetails)) {
 			return hints;
 		}
 
@@ -65,6 +70,16 @@ export class GrammarInlayHintsProvider implements InlayHintsProvider {
 				);
 				hint.paddingLeft = true;
 				hints.push(hint);
+			}
+			if (showSyntaxDetails) {
+				hints.push(
+					...getSyntaxDetailInlays(
+						rule.nameRange.end.line,
+						rule.nameRange.end.character,
+						rule.definitionText,
+						dialect,
+					),
+				);
 			}
 		}
 

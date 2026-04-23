@@ -10,7 +10,9 @@ describe("grammar tokenizer", () => {
 			),
 		).toBe(true);
 		expect(
-			tokens.some((token) => token.kind === "number" && token.text === "%x41"),
+			tokens.some(
+				(token) => token.kind === "charCode" && token.text === "%x41",
+			),
 		).toBe(true);
 		expect(
 			tokens.some(
@@ -36,6 +38,40 @@ describe("grammar tokenizer", () => {
 		).toBe(true);
 		expect(
 			tokens.some((token) => token.kind === "repeat" && token.text === "?"),
+		).toBe(true);
+	});
+
+	test("does not tokenize W3C EBNF character literals as references", () => {
+		const tokens = tokenizeGrammar(
+			"unescaped ::= [#x20-#x21] | [a-zA-Z] | [^#x0-#x8] | real\n",
+			"ebnf",
+		);
+		const references = tokens
+			.filter((token) => token.kind === "reference")
+			.map((token) => token.text);
+
+		expect(references).toContain("real");
+		expect(references).not.toContain("x20");
+		expect(references).not.toContain("a-zA-Z");
+	});
+
+	test("tokenizes production comments, numbers, and EBNF character syntax", () => {
+		const tokens = tokenizeGrammar(
+			"/* note */\n[1] char ::= [#x20-#x21] | #xA ; trailing\n",
+			"ebnf",
+		);
+
+		expect(tokens.some((token) => token.kind === "comment")).toBe(true);
+		expect(
+			tokens.some((token) => token.kind === "number" && token.text === "[1]"),
+		).toBe(true);
+		expect(
+			tokens.some(
+				(token) => token.kind === "charClass" && token.text === "[#x20-#x21]",
+			),
+		).toBe(true);
+		expect(
+			tokens.some((token) => token.kind === "charCode" && token.text === "#xA"),
 		).toBe(true);
 	});
 

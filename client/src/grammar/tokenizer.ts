@@ -15,6 +15,8 @@ export type GrammarTokenKind =
 	| "comment"
 	| "group"
 	| "repeat"
+	| "charCode"
+	| "charClass"
 	| "unknown";
 
 /**
@@ -29,9 +31,13 @@ export interface GrammarToken {
 
 const PRODUCTION_RE =
 	/^\s*(?:\[[^\]\r\n]+\]\s*)?(<[^<>\r\n]+>|[A-Za-z_][A-Za-z0-9_.:-]*)\s*(::=)/;
+const EBNF_PRODUCTION_NUMBER_RE = /^\s*(\[[^\]\r\n]+\])(?=\s*[A-Za-z_])/;
 const ANGLE_RE = /<[^<>\r\n]+>/g;
 const BARE_RE = /\b[A-Za-z_][A-Za-z0-9_.:-]*\b/g;
 const LITERAL_RE = /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g;
+const EBNF_CHAR_CLASS_RE = /\[(?:\^)?[^\]\r\n]*\]/g;
+const EBNF_CHAR_CODE_RE = /#x[0-9A-Fa-f]+/g;
+const EBNF_BLOCK_COMMENT_RE = /\/\*.*?\*\//g;
 const LINE_SPLIT_RE = /\r\n|\n|\r/;
 
 /**
@@ -70,6 +76,7 @@ function abnfKind(kind: AbnfTokenKind): GrammarTokenKind | undefined {
 		case AbnfTokenKind.ProseValue:
 			return "literal";
 		case AbnfTokenKind.NumericValue:
+			return "charCode";
 		case AbnfTokenKind.Integer:
 			return "number";
 		case AbnfTokenKind.Comment:
@@ -106,13 +113,86 @@ function tokenizeProductionLine(
 	dialect: Exclude<GrammarDialect, "abnf">,
 ): GrammarToken[] {
 	const production = line.match(PRODUCTION_RE);
+	const referenceLine = maskReferenceExclusions(line, dialect);
 	return [
+		...commentTokens(line, lineNumber, dialect),
+		...productionNumberTokens(line, lineNumber, dialect),
 		...productionTokens(line, lineNumber, production),
 		...literalTokens(line, lineNumber),
-		...angleReferenceTokens(line, lineNumber, production),
-		...bareReferenceTokens(line, lineNumber, dialect, production),
+		...ebnfCharacterTokens(line, lineNumber, dialect),
+		...angleReferenceTokens(referenceLine, lineNumber, production),
+		...bareReferenceTokens(referenceLine, lineNumber, dialect, production),
 		...operatorTokens(line, lineNumber),
 	];
+}
+
+function maskMatch(match: string): string {
+	return " ".repeat(match.length);
+}
+
+function maskSemicolonComment(line: string): string {
+	const semicolon = line.indexOf(";");
+	return semicolon < 0
+		? line
+		: `${line.slice(0, semicolon)}${" ".repeat(line.length - semicolon)}`;
+}
+
+function maskReferenceExclusions(
+	line: string,
+	dialect: Exclude<GrammarDialect, "abnf">,
+): string {
+	let out = maskSemicolonComment(line)
+		.replace(LITERAL_RE, maskMatch)
+		.replace(EBNF_BLOCK_COMMENT_RE, maskMatch);
+	if (dialect === "ebnf") {
+		out = out
+			.replace(EBNF_CHAR_CLASS_RE, maskMatch)
+			.replace(EBNF_CHAR_CODE_RE, maskMatch);
+	}
+	return out;
+}
+
+function commentTokens(
+	line: string,
+	lineNumber: number,
+	dialect: Exclude<GrammarDialect, "abnf">,
+): GrammarToken[] {
+	const tokens: GrammarToken[] = [];
+	const semicolon = line.indexOf(";");
+	if (semicolon >= 0) {
+		tokens.push({
+			kind: "comment",
+			text: line.slice(semicolon),
+			line: lineNumber,
+			column: semicolon,
+		});
+	}
+	if (dialect === "ebnf") {
+		for (const match of line.matchAll(EBNF_BLOCK_COMMENT_RE)) {
+			tokens.push({
+				kind: "comment",
+				text: match[0] ?? "",
+				line: lineNumber,
+				column: match.index ?? 0,
+			});
+		}
+	}
+	return tokens;
+}
+
+function productionNumberTokens(
+	line: string,
+	lineNumber: number,
+	dialect: Exclude<GrammarDialect, "abnf">,
+): GrammarToken[] {
+	if (dialect !== "ebnf") {
+		return [];
+	}
+	const match = line.match(EBNF_PRODUCTION_NUMBER_RE);
+	const text = match?.[1];
+	return text
+		? [{ kind: "number", text, line: lineNumber, column: line.indexOf(text) }]
+		: [];
 }
 
 function productionTokens(
@@ -148,6 +228,44 @@ function literalTokens(line: string, lineNumber: number): GrammarToken[] {
 		line: lineNumber,
 		column: match.index ?? 0,
 	}));
+}
+
+function ebnfCharacterTokens(
+	line: string,
+	lineNumber: number,
+	dialect: Exclude<GrammarDialect, "abnf">,
+): GrammarToken[] {
+	if (dialect !== "ebnf") {
+		return [];
+	}
+	const classTokens = Array.from(
+		line.matchAll(EBNF_CHAR_CLASS_RE),
+		(match) => ({
+			kind: "charClass" as const,
+			text: match[0] ?? "",
+			line: lineNumber,
+			column: match.index ?? 0,
+		}),
+	);
+	const classRanges = classTokens.map((token) => ({
+		start: token.column,
+		end: token.column + token.text.length,
+	}));
+	const codeTokens = Array.from(line.matchAll(EBNF_CHAR_CODE_RE), (match) => {
+		const column = match.index ?? 0;
+		return {
+			kind: "charCode" as const,
+			text: match[0] ?? "",
+			line: lineNumber,
+			column,
+		};
+	}).filter(
+		(token) =>
+			!classRanges.some(
+				(range) => token.column >= range.start && token.column < range.end,
+			),
+	);
+	return [...classTokens, ...codeTokens];
 }
 
 function angleReferenceTokens(
@@ -186,6 +304,12 @@ function operatorTokens(line: string, lineNumber: number): GrammarToken[] {
 		...repeatedOperatorTokens(line, lineNumber, "?", "repeat"),
 		...repeatedOperatorTokens(line, lineNumber, "+", "repeat"),
 		...repeatedOperatorTokens(line, lineNumber, "*", "repeat"),
+		...repeatedOperatorTokens(line, lineNumber, "(", "group"),
+		...repeatedOperatorTokens(line, lineNumber, ")", "group"),
+		...repeatedOperatorTokens(line, lineNumber, "[", "group"),
+		...repeatedOperatorTokens(line, lineNumber, "]", "group"),
+		...repeatedOperatorTokens(line, lineNumber, "{", "group"),
+		...repeatedOperatorTokens(line, lineNumber, "}", "group"),
 	];
 }
 

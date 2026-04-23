@@ -6,7 +6,12 @@ import {
 	type Position,
 	type TextDocument,
 } from "vscode";
+import { CORE_RULES } from "../../abnf/core-rules.ts";
+import { getGrammarDialectDescriptor } from "../dialects.ts";
+import { normalizeSymbolName } from "../grammar.ts";
+import { getSyntaxHover } from "../syntax-details.ts";
 import type { GrammarWorkspace } from "../workspace.ts";
+import { collectWorkspaceReferenceCount } from "./symbol-locations.ts";
 import { getWordLookup } from "./word-at-position.ts";
 
 /**
@@ -24,29 +29,67 @@ export class GrammarHoverProvider implements HoverProvider {
 		position: Position,
 		_token: CancellationToken,
 	): Hover | undefined {
+		const syntaxHover = getSyntaxHover(
+			doc.lineAt(position.line).text,
+			position.line,
+			position.character,
+			doc.languageId as never,
+		);
+		if (syntaxHover) {
+			return syntaxHover;
+		}
+
 		const lookup = getWordLookup(doc, position, this.#grammarWorkspace);
 		if (!lookup) {
 			return undefined;
 		}
 
 		const definitions = lookup.symbolTable.definitions.get(lookup.word);
-		const operator = lookup.dialect === "abnf" ? "=" : "::=";
-		if (!definitions || definitions.length === 0) {
+		const workspaceDefinitions =
+			definitions && definitions.length > 0
+				? definitions
+				: this.#grammarWorkspace
+						.findDefinitions(lookup.word, lookup.dialect)
+						.map((entry) => entry.rule);
+		const coreRule =
+			lookup.dialect === "abnf" && workspaceDefinitions.length === 0
+				? CORE_RULES.get(lookup.word)
+				: undefined;
+		if (workspaceDefinitions.length === 0 && !coreRule) {
 			return undefined;
 		}
 
-		const parts: string[] = [];
+		const descriptor = getGrammarDialectDescriptor(lookup.dialect);
+		const key = normalizeSymbolName(lookup.word, lookup.dialect);
+		const refCount = collectWorkspaceReferenceCount(
+			this.#grammarWorkspace,
+			key,
+			lookup.dialect,
+			doc.uri.toString(),
+			lookup.symbolTable,
+		);
+		const parts = [
+			`**${descriptor.displayName} rule** · ${descriptor.standardName}`,
+			`References: ${refCount}`,
+		];
+		if (coreRule) {
+			parts.push("Built-in ABNF core rule.");
+			parts.push("Not user-defined. Create/rename actions do not apply.");
+		}
 
-		for (const rule of definitions) {
+		const fence = "```";
+		for (const rule of coreRule ? [coreRule] : workspaceDefinitions) {
 			parts.push(
-				`\`\`\`${lookup.dialect}\n${rule.name} ${operator} ${rule.definitionText}\n\`\`\``,
+				`${fence}${lookup.dialect}\n${rule.name} ${descriptor.assignmentOperator} ${rule.definitionText}\n${fence}`,
 			);
 			if (rule.precedingComment) {
 				parts.push(rule.precedingComment);
 			}
 		}
 
-		const md = new MarkdownString(parts.join("\n\n---\n\n"));
-		return new Hover(md, lookup.wordRange);
+		return new Hover(
+			new MarkdownString(parts.join("\n\n---\n\n")),
+			lookup.wordRange,
+		);
 	}
 }

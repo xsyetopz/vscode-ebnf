@@ -1,7 +1,7 @@
 {
   "name": "vscode-bnf-intellisense",
   "type": "module",
-  "displayName": "BNF IntelliSense",
+  "displayName": "BNF-family Syntax Highlighting and Intellisense",
   "description": "BNF, EBNF, ABNF, and RBNF grammar support with syntax highlighting, navigation, diagnostics, formatting, and more",
   "version": "0.1.2",
   "author": {
@@ -185,11 +185,11 @@
       },
       {
         "language": "ebnf",
-        "path": "snippets/bnf.json"
+        "path": "snippets/ebnf.json"
       },
       {
         "language": "rbnf",
-        "path": "snippets/bnf.json"
+        "path": "snippets/rbnf.json"
       }
     ],
     "configuration": {
@@ -258,6 +258,21 @@
           "default": 80,
           "description": "Wrap long rule bodies to this many columns. Set to 0 to disable wrapping."
         },
+        "bnf.formatting.alignProductionNumbers": {
+          "type": "boolean",
+          "default": true,
+          "description": "Align optional EBNF production numbers with rule names when formatting."
+        },
+        "bnf.formatting.preserveCommentSpacing": {
+          "type": "boolean",
+          "default": true,
+          "description": "Preserve standalone comment block spacing when formatting grammar files."
+        },
+        "bnf.formatting.trimTrailingBlankLines": {
+          "type": "boolean",
+          "default": true,
+          "description": "Trim trailing blank lines before final newline handling."
+        },
         "bnf.formatting.preserveContinuationLineBreaks": {
           "type": "boolean",
           "default": false,
@@ -287,6 +302,11 @@
           "type": "boolean",
           "default": false,
           "description": "Mark unused rules inline (in addition to diagnostic)."
+        },
+        "bnf.inlayHints.syntaxDetails": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show lightweight inline syntax detail markers for repetitions and terminals."
         },
         "abnf.diagnostics.enable": {
           "type": "boolean",
@@ -351,6 +371,16 @@
           "default": 80,
           "description": "(Legacy ABNF alias) Wrap long rule bodies to this many columns. Set to 0 to disable wrapping."
         },
+        "abnf.formatting.preserveCommentSpacing": {
+          "type": "boolean",
+          "default": true,
+          "description": "(Legacy ABNF alias) Preserve standalone comment block spacing when formatting grammar files."
+        },
+        "abnf.formatting.trimTrailingBlankLines": {
+          "type": "boolean",
+          "default": true,
+          "description": "(Legacy ABNF alias) Trim trailing blank lines before final newline handling."
+        },
         "abnf.formatting.preserveContinuationLineBreaks": {
           "type": "boolean",
           "default": false,
@@ -380,6 +410,11 @@
           "type": "boolean",
           "default": false,
           "description": "(Legacy ABNF alias) Mark unused rules inline (in addition to diagnostic)."
+        },
+        "abnf.inlayHints.syntaxDetails": {
+          "type": "boolean",
+          "default": false,
+          "description": "(Legacy ABNF alias) Show lightweight inline syntax detail markers for repetitions and terminals."
         }
       }
     }

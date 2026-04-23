@@ -24,37 +24,53 @@
     "expression": {
       "patterns": [
         { "include": "#comment" },
-        {
-          "name": "string.quoted.double.rbnf",
-          "begin": "(\\\")",
-          "beginCaptures": { "1": { "name": "punctuation.definition.string.begin.rbnf" } },
-          "end": "(\\\")|(?=\\n)",
-          "endCaptures": { "1": { "name": "punctuation.definition.string.end.rbnf" } }
-        },
-        {
-          "name": "string.quoted.single.rbnf",
-          "begin": "(')",
-          "beginCaptures": { "1": { "name": "punctuation.definition.string.begin.rbnf" } },
-          "end": "(')|(?=\\n)",
-          "endCaptures": { "1": { "name": "punctuation.definition.string.end.rbnf" } }
-        },
-        {
-          "name": "keyword.operator.alternation.rbnf",
-          "match": "\\|"
-        },
-        {
-          "name": "keyword.operator.repetition.rbnf",
-          "match": "[?+*]"
-        },
-        {
-          "name": "punctuation.definition.group.rbnf",
-          "match": "[()\\[\\]{}]"
-        },
-        {
-          "name": "variable.other.rule.rbnf",
-          "match": "<[^<>\\r\\n]+>|[A-Za-z_][A-Za-z0-9_.:-]*"
-        }
+        { "include": "#repetition-prefix" },
+        { "include": "#repetition-range" },
+        { "include": "#double-string" },
+        { "include": "#single-string" },
+        { "include": "#alternation" },
+        { "include": "#suffix-repetition" },
+        { "include": "#group-delimiter" },
+        { "include": "#identifier" }
       ]
+    },
+    "repetition-prefix": {
+      "name": "constant.numeric.repetition.rbnf",
+      "match": "\\b\\d+(?=\\*)"
+    },
+    "repetition-range": {
+      "name": "keyword.operator.repetition.rbnf",
+      "match": "\\d*\\*\\d*"
+    },
+    "double-string": {
+      "name": "string.quoted.double.rbnf",
+      "begin": "(\\\")",
+      "beginCaptures": { "1": { "name": "punctuation.definition.string.begin.rbnf" } },
+      "end": "(\\\")|(?=\\n)",
+      "endCaptures": { "1": { "name": "punctuation.definition.string.end.rbnf" } }
+    },
+    "single-string": {
+      "name": "string.quoted.single.rbnf",
+      "begin": "(')",
+      "beginCaptures": { "1": { "name": "punctuation.definition.string.begin.rbnf" } },
+      "end": "(')|(?=\\n)",
+      "endCaptures": { "1": { "name": "punctuation.definition.string.end.rbnf" } }
+    },
+    "alternation": {
+      "name": "keyword.operator.alternation.rbnf",
+      "match": "\\|"
+    },
+    "suffix-repetition": {
+      "name": "keyword.operator.repetition.rbnf",
+      "match": "[?+*]"
+    },
+    "group-delimiter": {
+      "name": "punctuation.definition.group.rbnf",
+      "match": "[()\\[\\]{}]"
+    },
+    "identifier": {
+      "name": "variable.other.rule.rbnf",
+      "match": "<[^<>\\r\\n]+>|[A-Za-z_][A-Za-z0-9_.:-]*"
     }
   }
 }

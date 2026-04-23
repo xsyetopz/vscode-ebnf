@@ -1,12 +1,12 @@
-import {
-	type CancellationToken,
+import type {
+	CancellationToken,
 	DocumentHighlight,
-	DocumentHighlightKind,
-	type DocumentHighlightProvider,
-	type Position,
-	type TextDocument,
+	DocumentHighlightProvider,
+	Position,
+	TextDocument,
 } from "vscode";
 import type { GrammarWorkspace } from "../workspace.ts";
+import { collectDocumentHighlights } from "./symbol-locations.ts";
 import { getWordLookup } from "./word-at-position.ts";
 
 /**
@@ -30,27 +30,10 @@ export class GrammarDocumentHighlightProvider
 		if (!lookup) {
 			return undefined;
 		}
-
-		const highlights: DocumentHighlight[] = [];
-
-		const defs = lookup.symbolTable.definitions.get(lookup.word);
-		if (defs) {
-			for (const rule of defs) {
-				highlights.push(
-					new DocumentHighlight(rule.nameRange, DocumentHighlightKind.Write),
-				);
-			}
-		}
-
-		const refs = lookup.symbolTable.references.get(lookup.word);
-		if (refs) {
-			for (const ref of refs) {
-				highlights.push(
-					new DocumentHighlight(ref.range, DocumentHighlightKind.Read),
-				);
-			}
-		}
-
+		const highlights = collectDocumentHighlights(
+			lookup.symbolTable,
+			lookup.word,
+		);
 		return highlights.length > 0 ? highlights : undefined;
 	}
 }

@@ -37,6 +37,9 @@ const EBNF_NAME_RE =
 const BNF_NAME_RE = /^\s*(<[^<>\r\n]+>|[A-Za-z_][A-Za-z0-9_.:-]*)\s*(::=)/;
 const STRING_RE = /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g;
 const XML_BLOCK_COMMENT_RE = /\/\*[\s\S]*?\*\//g;
+const EBNF_CHAR_CLASS_RE = /\[(?:\^)?[^\]\r\n]*\]/g;
+const EBNF_CHAR_CODE_RE = /#x[0-9A-Fa-f]+/g;
+const INVALID_EBNF_CHAR_CODE_RE = /#x(?![0-9A-Fa-f]+\b)[A-Za-z0-9]*/g;
 const ANGLE_REFERENCE_RE = /<[^<>\r\n]+>/g;
 const BARE_REFERENCE_RE = /\b[A-Za-z_][A-Za-z0-9_.:-]*\b/g;
 const XML_HEX_MARKER_RE = /^(x|X)$/;
@@ -78,15 +81,23 @@ function stripLineComment(line: string): string {
 	return `${line.slice(0, semicolon)}${" ".repeat(line.length - semicolon)}`;
 }
 
+function maskMatch(match: string): string {
+	return " ".repeat(match.length);
+}
+
+function maskEbnfCharacters(text: string): string {
+	return text
+		.replace(EBNF_CHAR_CLASS_RE, maskMatch)
+		.replace(EBNF_CHAR_CODE_RE, maskMatch);
+}
+
 function stripCommentsAndLiterals(
 	text: string,
 	dialect: ProductionDialect,
 ): string {
-	let out = text.replace(STRING_RE, (match) => " ".repeat(match.length));
+	let out = text.replace(STRING_RE, maskMatch);
 	if (dialect === "ebnf") {
-		out = out.replace(XML_BLOCK_COMMENT_RE, (match) =>
-			" ".repeat(match.length),
-		);
+		out = maskEbnfCharacters(out.replace(XML_BLOCK_COMMENT_RE, maskMatch));
 	}
 	return out.split("\n").map(stripLineComment).join("\n");
 }
@@ -208,6 +219,105 @@ function referencesFromBody(
 		}));
 }
 
+function diagnosticAtBodyOffset(
+	text: string,
+	bodyStartOffset: number,
+	relativeStart: number,
+	length: number,
+	message: string,
+	dialect: ProductionDialect,
+): Diagnostic {
+	return {
+		message,
+		range: rangeFromOffsets(
+			text,
+			bodyStartOffset + relativeStart,
+			bodyStartOffset + relativeStart + length,
+		),
+		severity: DiagnosticSeverity.Warning,
+		source: dialect,
+	};
+}
+
+function invalidEbnfCharacterDiagnostics(
+	text: string,
+	bodyStartOffset: number,
+	body: string,
+	dialect: ProductionDialect,
+): Diagnostic[] {
+	if (dialect !== "ebnf") {
+		return [];
+	}
+	return Array.from(body.matchAll(INVALID_EBNF_CHAR_CODE_RE), (match) =>
+		diagnosticAtBodyOffset(
+			text,
+			bodyStartOffset,
+			match.index ?? 0,
+			(match[0] ?? "").length,
+			"W3C XML EBNF character codes must use hexadecimal digits after #x",
+			dialect,
+		),
+	);
+}
+
+function delimiterDiagnostics(
+	text: string,
+	bodyStartOffset: number,
+	body: string,
+	dialect: ProductionDialect,
+): Diagnostic[] {
+	const clean = stripCommentsAndLiterals(body, dialect);
+	const stack: Array<{ ch: string; index: number }> = [];
+	const diagnostics: Diagnostic[] = [];
+	const pairs: Record<string, string> = { ")": "(", "]": "[", "}": "{" };
+	for (let i = 0; i < clean.length; i++) {
+		const ch = clean[i];
+		if (ch === "(" || ch === "[" || ch === "{") {
+			stack.push({ ch, index: i });
+		} else if (ch === ")" || ch === "]" || ch === "}") {
+			const expected = pairs[ch];
+			const open = stack.pop();
+			if (!open || open.ch !== expected) {
+				diagnostics.push(
+					diagnosticAtBodyOffset(
+						text,
+						bodyStartOffset,
+						i,
+						1,
+						`Unmatched '${ch}' delimiter`,
+						dialect,
+					),
+				);
+			}
+		}
+	}
+	for (const open of stack) {
+		diagnostics.push(
+			diagnosticAtBodyOffset(
+				text,
+				bodyStartOffset,
+				open.index,
+				1,
+				`Unclosed '${open.ch}' delimiter`,
+				dialect,
+			),
+		);
+	}
+	return diagnostics;
+}
+
+function bodySyntaxDiagnostics(
+	text: string,
+	bodyStartOffset: number,
+	body: string,
+	dialect: ProductionDialect,
+): Diagnostic[] {
+	return [
+		...invalidEbnfCharacterDiagnostics(text, bodyStartOffset, body, dialect),
+		...delimiterDiagnostics(text, bodyStartOffset, body, dialect),
+	];
+}
+
 function emptyBodyDiagnostic(
 	name: string,
 	range: Range,
@@ -283,6 +393,9 @@ function productionRule(
 	if (rule.definitionText.length === 0) {
 		diagnostics.push(emptyBodyDiagnostic(rule.name, nameRange, dialect));
 	}
+	diagnostics.push(
+		...bodySyntaxDiagnostics(text, bodyStartOffset, body, dialect),
+	);
 	const nameDiagnostic =
 		dialect === "rbnf" ? rbnfNameDiagnostic(rule.name, nameRange) : undefined;
 	if (nameDiagnostic) {

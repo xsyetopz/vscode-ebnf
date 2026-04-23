@@ -18,6 +18,9 @@ export interface WordLookup {
  */
 export const IDENTIFIER_PATTERN = /[a-zA-Z][a-zA-Z0-9-]*/;
 
+const EBNF_CHAR_CLASS_RE = /\[(?:\^)?[^\]\r\n]*\]/g;
+const EBNF_CHAR_CODE_RE = /#x[0-9A-Fa-f]+/g;
+
 /**
  * Finds the grammar symbol under a VS Code document position.
  */
@@ -37,6 +40,10 @@ export function getWordLookup(
 			spacedResult.dialect,
 		);
 		return spacedResult;
+	}
+
+	if (isEbnfCharacterSyntax(doc, position)) {
+		return undefined;
 	}
 
 	const wordRange = doc.getWordRangeAtPosition(position, IDENTIFIER_PATTERN);
@@ -102,4 +109,30 @@ function findSpacedIdentifierRange(
 	}
 
 	return undefined;
+}
+
+function isEbnfCharacterSyntax(doc: TextDocument, position: Position): boolean {
+	if (doc.languageId !== "ebnf") {
+		return false;
+	}
+	const line = doc.lineAt(position.line).text;
+	return (
+		containsPosition(line, position.character, EBNF_CHAR_CLASS_RE) ||
+		containsPosition(line, position.character, EBNF_CHAR_CODE_RE)
+	);
+}
+
+function containsPosition(
+	line: string,
+	character: number,
+	pattern: RegExp,
+): boolean {
+	for (const match of line.matchAll(pattern)) {
+		const start = match.index ?? 0;
+		const end = start + (match[0] ?? "").length;
+		if (character >= start && character <= end) {
+			return true;
+		}
+	}
+	return false;
 }
